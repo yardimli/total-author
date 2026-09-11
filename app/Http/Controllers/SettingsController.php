@@ -21,6 +21,9 @@ class SettingsController extends Controller
         foreach ($data as $key => $value) {
             $user->$key = $value;
         }
+        if (array_key_exists('favorite_models', $data)) {
+            $user->favorites_initialized_at = now();
+        }
         $user->save();
 
         return $request->expectsJson() ? response()->json(['saved' => true]) : back()->with('status', 'Settings saved.');

@@ -52,6 +52,8 @@ class BookController extends Controller
     {
         $this->owned($request, $book);
 
+        app(\App\Services\DefaultFavorites::class)->initialize($request, app(\App\Services\ModelCatalog::class));
+
         return view('books.show', ['book' => $book]);
     }
 

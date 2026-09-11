@@ -260,3 +260,5 @@ Legend: `[x]` completed and checked, `[-]` in progress, `[ ]` remaining.
 - [x] B85 Add eight real application screenshots to README using raw.githubusercontent.com/yardimli/total-author/main image URLs, with feature captions and descriptive alt text. Verified every referenced image exists locally.
 
 - [x] B86 Add dynamic robots.txt and sitemap.xml for public pages, APP_URL-based canonical URLs, and noindex on auth/workspace views. Keep private book/account routes authenticated and excluded from crawling.
+
+- [x] B87 Extract ten model IDs from the supplied links into config/default_favorites.php. On first eligible writing-page visit, seed favorites from exact supported catalog matches, reuse login refresh/cache, preserve existing choices and deliberate empty lists, and retry later when no catalog is available. Migration applied; 69 PHP tests / 365 assertions pass.

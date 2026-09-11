@@ -82,3 +82,5 @@ Inventory of implemented features, 11 September 2026. This describes the current
 - Optional Mailgun account email; password recovery remains hidden/disabled without both credentials.
 - Shared contact forms on public/auth pages, stored in the database without email.
 - Generic privacy and terms pages linked from the footer.
+
+- Members who have not configured favorites receive matching starter models from config/default_favorites.php when opening their writing page. Initialization runs once and preserves later removals.
