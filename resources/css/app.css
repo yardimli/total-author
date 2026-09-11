@@ -2179,5 +2179,30 @@ dialog {
 #model-picker.welcome-highlight {
     outline: 3px solid var(--accent);
     outline-offset: -3px;
-    box-shadow: 0 0 0 3px var(--soft);
+    animation: welcome-border-blink 800ms step-end 3;
 }
+@keyframes welcome-border-blink {
+    0%,
+    45% {
+        outline-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--soft);
+    }
+    50%,
+    100% {
+        outline-color: transparent;
+        box-shadow: none;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    #chat-input.welcome-highlight,
+    #model-picker.welcome-highlight {
+        animation: none;
+        box-shadow: 0 0 0 3px var(--soft);
+    }
+}
+
+#chat-form:has(#chat-input:focus) {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+}
+

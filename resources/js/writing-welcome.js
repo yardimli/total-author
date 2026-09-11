@@ -8,7 +8,9 @@ export function showWritingWelcome(initialModel) {
             : "Choose an AI model from the model picker before sending your first message.";
     };
     setModel(initialModel);
+    let highlightTimer;
     const open = () => {
+        clearTimeout(highlightTimer);
         chat.classList.remove("welcome-highlight");
         picker.classList.remove("welcome-highlight");
         if (!dialog.open) dialog.showModal();
@@ -20,16 +22,15 @@ export function showWritingWelcome(initialModel) {
         requestAnimationFrame(() => {
             chat.classList.add("welcome-highlight");
             picker.classList.add("welcome-highlight");
+            clearTimeout(highlightTimer);
+            highlightTimer = setTimeout(() => {
+                chat.classList.remove("welcome-highlight");
+                picker.classList.remove("welcome-highlight");
+            }, 2400);
             chat.focus({ preventScroll: true });
             chat.setSelectionRange(chat.value.length, chat.value.length);
             chat.scrollIntoView({ block: "nearest" });
         });
-    });
-    chat.addEventListener("input", () =>
-        chat.classList.remove("welcome-highlight"),
-    );
-    picker.addEventListener("toggle", () => {
-        if (picker.open) picker.classList.remove("welcome-highlight");
     });
     dialog.querySelectorAll("[data-welcome-close]").forEach((button) => {
         button.addEventListener("click", () => dialog.close());
@@ -41,4 +42,3 @@ export function showWritingWelcome(initialModel) {
     open();
     return { setModel };
 }
-

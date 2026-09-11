@@ -266,3 +266,7 @@ Legend: `[x]` completed and checked, `[-]` in progress, `[ ]` remaining.
 - [x] B88 Default first-time model pickers to Favorites only, persist filter preference, and select the cheapest supported favorite by output price (input price breaks ties). Preserve existing/manual model choices; automatic choices are reconsidered on writing-page visits until an explicit model selection. Migration applied; 70 tests / 374 assertions pass; production assets rebuilt.
 
 - [x] B89 Show welcome on every writing-page entry, including browser back/forward restoration. Name the current model, explain cheaper-model instruction-following limitations and suggest mid-range choices. Closing via button/X/Escape highlights model/chat controls and focuses the chat cursor, switching mobile to chat. Isolated browser fixture verifies focus, highlights, mobile behavior, and repeat opening; production assets rebuilt.
+
+- [x] B90 Blink welcome highlight borders three times over 2.4 seconds, then remove them automatically without moving chat focus. Reduced-motion preference uses a temporary steady highlight. Production assets rebuilt.
+
+- [x] B91 Highlight the chat-form border in the theme accent while chat-input is focused. The active border clears on blur without shifting layout. Production assets rebuilt.
