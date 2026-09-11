@@ -74,12 +74,12 @@ class DefaultFavoritesTest extends TestCase
         Http::assertSentCount(2);
     }
 
-    public function test_new_members_get_cheapest_favorite_until_they_choose_a_model(): void
+    public function test_new_members_prefer_sol_over_cheaper_favorites_until_they_choose_a_model(): void
     {
         $user = User::factory()->create();
         $book = $this->book($user);
         $catalog = $this->catalog();
-        $catalog['data'][0]['pricing'] = ['prompt' => '0.000003', 'completion' => '0.000002'];
+        $catalog['data'][0]['pricing'] = ['prompt' => '0.000003', 'completion' => '0.000020'];
         $catalog['data'][1]['pricing'] = ['prompt' => '0.000001', 'completion' => '0.000010'];
         Cache::forever('openrouter.catalog', $catalog);
         $this->actingAs($user)->get('/books/'.$book->id)->assertOk()->assertSee('id="favorites-only" type="checkbox" checked', false);
@@ -91,4 +91,23 @@ class DefaultFavoritesTest extends TestCase
         $this->assertNotNull($user->fresh()->model_selected_at);
         $this->assertFalse((bool) $user->fresh()->favorites_only);
     }
+    public function test_fallback_uses_first_available_favorite_in_saved_order(): void
+    {
+        $user = User::factory()->create();
+        $user->favorite_models = ['missing/model', 'other/model', 'anthropic/claude-opus-5'];
+        $user->save();
+        $book = $this->book($user);
+        Cache::forever('openrouter.catalog', $this->catalog());
+        Http::fake();
+
+        $this->actingAs($user)->get('/books/'.$book->id)->assertOk();
+        $this->assertSame('other/model', $user->fresh()->selected_model);
+        $this->assertNull($user->fresh()->model_selected_at);
+
+        $this->patchJson('/account', ['favorite_models' => []])->assertOk();
+        $this->get('/books/'.$book->id)->assertOk();
+        $this->assertNull($user->fresh()->selected_model);
+        Http::assertNothingSent();
+    }
+
 }

@@ -270,3 +270,7 @@ Legend: `[x]` completed and checked, `[-]` in progress, `[ ]` remaining.
 - [x] B90 Blink welcome highlight borders three times over 2.4 seconds, then remove them automatically without moving chat focus. Reduced-motion preference uses a temporary steady highlight. Production assets rebuilt.
 
 - [x] B91 Highlight the chat-form border in the theme accent while chat-input is focused. The active border clears on blur without shifting layout. Production assets rebuilt.
+
+- [x] B92 Make manuscript and chat input read-only during AI requests; disable manuscript formatting controls and show thinking status beside the word count. Restore editing after completion, cancellation, or failure, including refresh errors. Isolated browser verified blocked document mutations and restored editing; production assets rebuilt.
+
+- [x] B93 Replace cheapest-model default with GPT-5.6 Sol when available in favorites; otherwise choose the first supported favorite in saved order. Preserve explicit user choices and leave selection empty when no favorites are available. Five focused tests / 34 assertions pass.

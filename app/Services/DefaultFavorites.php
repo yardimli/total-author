@@ -28,27 +28,17 @@ class DefaultFavorites
             return isset($model['id']) && stripos(($model['name'] ?? '').' '.$model['id'], 'batch') === false && in_array('text', $outputs) && ! in_array('image', $outputs);
         })->pluck('id')->all();
         $favorites = array_values(array_intersect(config('default_favorites', []), $available));
-        DB::transaction(function () use ($user, $favorites, $models) {
+        DB::transaction(function () use ($user, $favorites, $available) {
             $current = User::lockForUpdate()->findOrFail($user->id);
             if (! $current->favorites_initialized_at && empty($current->favorite_models)) {
                 $current->favorite_models = $favorites;
                 $current->favorites_initialized_at = now();
             }
             if (! $current->model_selected_at) {
-                $cheapest = collect($models['data'])->filter(function ($model) use ($current) {
-                    $outputs = $model['architecture']['output_modalities'] ?? [];
-
-                    return in_array($model['id'] ?? '', $current->favorite_models ?? [])
-                        && stripos(($model['name'] ?? '').' '.($model['id'] ?? ''), 'batch') === false
-                        && in_array('text', $outputs) && ! in_array('image', $outputs)
-                        && is_numeric($model['pricing']['completion'] ?? null) && (float) $model['pricing']['completion'] >= 0
-                        && is_numeric($model['pricing']['prompt'] ?? null) && (float) $model['pricing']['prompt'] >= 0;
-                })->sort(function ($a, $b) {
-                    return ((float) $a['pricing']['completion'] <=> (float) $b['pricing']['completion'])
-                        ?: ((float) $a['pricing']['prompt'] <=> (float) $b['pricing']['prompt'])
-                        ?: strcmp($a['id'], $b['id']);
-                })->first();
-                $current->selected_model = $cheapest['id'] ?? null;
+                $supportedFavorites = array_values(array_intersect($current->favorite_models ?? [], $available));
+                $current->selected_model = in_array('openai/gpt-5.6-sol', $supportedFavorites, true)
+                    ? 'openai/gpt-5.6-sol'
+                    : ($supportedFavorites[0] ?? null);
             }
             $current->save();
             $user->setRawAttributes($current->getAttributes(), true);

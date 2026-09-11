@@ -845,6 +845,9 @@ export async function start() {
                 : null;
         const cursor = { ...editor.cursor(), revision: state.book.revision };
         busy = true;
+        editor.setReadOnly(true);
+        $("#chat-input").readOnly = true;
+        $("#ai-thinking-status").hidden = false;
         $("#send-chat").disabled = true;
         $("#send-chat").textContent = "Thinking…";
         const fingerprint = JSON.stringify({
@@ -907,10 +910,16 @@ export async function start() {
             else if (error.status !== 409) uncertainRequest = null;
             throw error;
         } finally {
-            busy = false;
-            $("#send-chat").disabled = false;
-            $("#send-chat").textContent = "Send ↗";
-            await refresh();
+            try {
+                await refresh();
+            } finally {
+                busy = false;
+                editor.setReadOnly(false);
+                $("#chat-input").readOnly = false;
+                $("#ai-thinking-status").hidden = true;
+                $("#send-chat").disabled = false;
+                $("#send-chat").textContent = "Send ↗";
+            }
             const next = state.proposals.find(
                 (proposal) =>
                     proposal.status === "pending" &&

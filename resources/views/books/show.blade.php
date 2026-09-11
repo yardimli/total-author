@@ -33,7 +33,7 @@
             <div class="editor-toolbar"><div class="row"><button id="undo" title="Undo">↶</button><button id="redo" title="Redo">↷</button><button id="bold" title="Bold"><strong>B</strong></button><button id="italic" title="Italic"><em>I</em></button><select id="block-style" aria-label="Paragraph style"><option value="paragraph">Body text</option><option value="chapter">Chapter heading</option><option value="scene">Scene heading</option></select><button id="scene-break" title="Scene separator">⁂</button></div></div>
             <div id="recovery" class="notice" hidden>A recovered local draft is available. <button id="recover-draft">Review local draft</button><button id="discard-draft">Keep server version</button></div>
             <div id="editor-scroll"><div id="editor"></div></div>
-            <footer class="page-navigation"><span id="word-count">0 words</span></footer>
+            <footer class="page-navigation"><span id="word-count">0 words</span><span id="ai-thinking-status" role="status" hidden>AI is thinking. Please don’t write anything.</span></footer>
         </section>
         <aside class="chat-pane" aria-label="AI writing companion">
             <div class="chat-heading"><div class="eyebrow">A SECOND PAIR OF EYES</div><h2>Your writing companion <span>✧</span></h2><p class="muted">Think aloud. Explore a possibility. Keep your voice.</p></div>

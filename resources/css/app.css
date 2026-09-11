@@ -2206,3 +2206,8 @@ dialog {
     box-shadow: 0 0 0 1px var(--accent);
 }
 
+#ai-thinking-status {
+    margin-left: 16px;
+    color: var(--accent);
+    font-size: 12px;
+}

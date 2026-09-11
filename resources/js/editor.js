@@ -36,6 +36,7 @@ export function createEditor(
     onSelection = () => {},
 ) {
     let entries = [];
+    let readOnly = false;
     let markerFrame,
         markerGeneration = 0;
     function references(doc) {
@@ -137,6 +138,7 @@ export function createEditor(
             "aria-multiline": "true",
         },
         dispatchTransaction(tr) {
+            if (readOnly && tr.docChanged) return;
             view.updateState(view.state.apply(tr));
             if (tr.docChanged) {
                 onChange(view.state.doc.toJSON());
@@ -346,6 +348,18 @@ export function createEditor(
     updateCounts();
     return {
         view,
+        setReadOnly(value) {
+            readOnly = value;
+            view.setProps({ editable: () => !readOnly });
+            view.dom.setAttribute("aria-readonly", String(readOnly));
+            document
+                .querySelectorAll(
+                    ".editor-toolbar button, .editor-toolbar select",
+                )
+                .forEach((control) => {
+                    control.disabled = readOnly;
+                });
+        },
         cursor() {
             const { $head } = view.state.selection;
             const block = Math.min(
