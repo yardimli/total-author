@@ -84,7 +84,12 @@ return [
     |
     */
 
-    'locale' => 'en',
+    'locale' => env('APP_LOCALE', 'en'),
+
+    // Keep the configured default separate: App::setLocale changes app.locale per request.
+    'default_locale' => env('APP_LOCALE', 'en'),
+
+    'allow_language_change' => strtolower((string) env('ALLOW_LANGUAGE_CHANGE', 'no')) === 'yes',
 
     /*
     |--------------------------------------------------------------------------

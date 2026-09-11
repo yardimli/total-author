@@ -8,12 +8,12 @@ class ManuscriptContext
 {
     private static function position(array $blocks, int $block, int $offset): int
     {
-        abort_unless(isset($blocks[$block]), 422, 'Invalid manuscript cursor.');
+        abort_unless(isset($blocks[$block]), 422, __('Invalid manuscript cursor.'));
         $encoded = mb_convert_encoding($blocks[$block], 'UTF-16LE', 'UTF-8');
-        abort_unless($offset >= 0 && $offset * 2 <= strlen($encoded), 422, 'Invalid manuscript cursor offset.');
+        abort_unless($offset >= 0 && $offset * 2 <= strlen($encoded), 422, __('Invalid manuscript cursor offset.'));
         $prefix = substr($encoded, 0, $offset * 2);
         $text = mb_convert_encoding($prefix, 'UTF-8', 'UTF-16LE');
-        abort_unless(mb_convert_encoding($text, 'UTF-16LE', 'UTF-8') === $prefix, 422, 'Cursor splits a Unicode character.');
+        abort_unless(mb_convert_encoding($text, 'UTF-16LE', 'UTF-8') === $prefix, 422, __('Cursor splits a Unicode character.'));
 
         return array_sum(array_map('strlen', array_slice($blocks, 0, $block))) + $block + strlen($text);
     }

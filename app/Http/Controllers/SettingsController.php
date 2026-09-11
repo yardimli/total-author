@@ -29,7 +29,7 @@ class SettingsController extends Controller
         }
         $user->save();
 
-        return $request->expectsJson() ? response()->json(['saved' => true]) : back()->with('status', 'Settings saved.');
+        return $request->expectsJson() ? response()->json(['saved' => true]) : back()->with('status', __('Settings saved.'));
     }
 
     public function models(Request $request, ModelCatalog $catalog)

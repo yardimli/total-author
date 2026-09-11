@@ -392,6 +392,56 @@ class WritingWorkspaceTest extends TestCase
         $this->assertSame('Mara waited by the gate.', $book->fresh()->manuscript);
     }
 
+    public function test_timed_out_chat_releases_lock_and_next_send_succeeds_without_refresh(): void
+    {
+        $book = $this->book();
+        $this->catalog();
+        $calls = 0;
+        Http::fake(['*/chat/completions' => function () use (&$calls) {
+            $calls++;
+            if ($calls === 1) throw new \Illuminate\Http\Client\ConnectionException('cURL error 28: timed out');
+            $content = $calls === 2
+                ? ['intent' => 'conversation', 'entry_ids' => [], 'needs_names' => false]
+                : ['chat_response' => 'Ready to continue.', 'changes' => [], 'suggestions' => []];
+            return Http::response(['usage' => ['cost' => .001], 'choices' => [['message' => ['content' => json_encode($content)]]]]);
+        }]);
+        $request = ['message' => 'Discuss this book', 'model' => 'test/writer', 'history' => '0'];
+        $this->postJson('/api/books/'.$book->id.'/chat', $request + ['request_id' => (string) Str::uuid()])->assertUnprocessable()->assertJsonValidationErrors('ai');
+        $this->postJson('/api/books/'.$book->id.'/chat', $request + ['request_id' => (string) Str::uuid()])->assertOk();
+        $this->assertSame(3, $calls);
+        $this->assertSame(['failed', 'completed'], $book->messages()->where('role', 'user')->orderBy('id')->pluck('status')->all());
+        $this->assertSame('Ready to continue.', $book->messages()->latest('id')->first()->content);
+        $this->assertSame('Mara waited by the gate.', $book->fresh()->manuscript);
+    }
+
+    public function test_abandoned_messages_are_failed_only_after_the_request_lock_is_released(): void
+    {
+        $book = $this->book();
+        $message = $book->messages()->create(['role' => 'user', 'content' => 'Please revise this scene.', 'status' => 'pending']);
+        $lock = new \App\Services\BookChatLock;
+        $this->assertTrue($lock->acquire($book->id));
+        try { $this->getJson('/api/books/'.$book->id)->assertOk()->assertJsonPath('messages.0.status', 'pending'); }
+        finally { $lock->release(); }
+        $this->getJson('/api/books/'.$book->id)->assertOk()->assertJsonPath('messages.0.status', 'failed');
+        $this->deleteJson('/api/books/'.$book->id.'/messages/'.$message->id)->assertOk();
+        $this->assertSoftDeleted('chat_messages', ['id' => $message->id]);
+        $this->getJson('/api/books/'.$book->id)->assertOk()->assertJsonCount(0, 'messages');
+    }
+
+    public function test_chat_process_lock_prevents_parallel_requests_and_releases_explicitly(): void
+    {
+        $book = $this->book();
+        $first = new \App\Services\BookChatLock;
+        $second = new \App\Services\BookChatLock;
+        $this->assertTrue($first->acquire($book->id));
+        try {
+            $this->assertFalse($second->acquire($book->id));
+            $this->postJson('/api/books/'.$book->id.'/chat', ['request_id' => (string) Str::uuid(), 'message' => 'Hello', 'model' => 'test/writer', 'history' => '0'])->assertStatus(409);
+        } finally { $first->release(); }
+        $this->assertTrue($second->acquire($book->id));
+        $second->release();
+    }
+
     public function test_batch_and_image_generation_models_are_rejected_before_payment(): void
     {
         $book = $this->book();

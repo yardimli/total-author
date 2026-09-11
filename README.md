@@ -211,3 +211,21 @@ This repository does not configure hosting, DNS, or production service accounts.
 ## Search-engine discovery
 
 `/robots.txt` advertises `/sitemap.xml`, which lists the landing, privacy, and terms pages. Public pages include canonical URLs; authentication and workspace views use noindex. Private book/account routes remain authenticated and are excluded from crawling. Sitemap and canonical URLs use `APP_URL`: set it to `https://total-author.com` on deployment and rebuild the configuration cache. Search engines cannot reach a localhost-only development server. Submit the deployed sitemap to your search-engine webmaster tools when the site is public.
+
+## Languages
+
+Set `APP_LOCALE=en` or `APP_LOCALE=tr` in `.env` to choose the default language (English unless changed). Run `php artisan config:clear` after changing it, or rebuild the configuration cache for deployment. Set `ALLOW_LANGUAGE_CHANGE=yes` to show the header switch and allow saved account/visitor preferences to override the default. With `ALLOW_LANGUAGE_CHANGE=no` (also the default when missing), the switch is hidden, change requests are blocked, and the UI always uses `APP_LOCALE`. Saved preferences are retained for later re-enabling. Member preferences are saved to the account, and guest preferences use a session and cookie. Laravel translations live in lang/en.json and lang/tr.json, with auth, validation, password, and pagination files in each language folder. JavaScript uses the same Laravel catalog through resources/js/i18n.js. Run npm run build after changing interface strings; npm run dev also regenerates the frontend translation key list on startup. Clear Laravel's configuration/view caches when deploying updated translations. Interface language does not translate existing manuscripts, codex content, or chat history.
+
+
+### Long AI requests
+
+Each OpenRouter completion can run for up to 120 seconds. A chat uses classification plus execution, so PHP permits 260 seconds and the browser waits up to 270 seconds for the whole workflow. Configure deployment proxy/FPM request limits to accommodate that window. Chat concurrency uses OS file locks in storage/framework/cache; workers must share the same lock-capable filesystem. These locks release when a request/process ends, including fatal PHP timeouts; do not delete active lock files. Uncertain provider charges remain reserved for reconciliation.
+
+
+## Administration
+
+All users default to `is_admin = 0`. Set `users.is_admin` to `1` directly in the database for an administrator. The dashboard then displays an Admin button leading to `/admin/users` (searchable, 25 users per page).
+
+The user list shows join date, book and archive counts, AI call count, settled AI cost, and demo spent/reserved amounts. Deleted books are excluded from book counts; financial values round up to two decimal places.
+
+Admins can use **Log in as user** for non-admin accounts. This switches the current browser session to that user's permissions and data. The header shows the current user's name and **Return to admin**. Impersonation cannot be nested or used to enter another admin account. Logging out ends the session; revoking the original administrator's flag also ends their impersonation session on the next request. Start/return events are recorded in Laravel's log with the two user IDs. Admin privileges are not editable through registration or account forms.

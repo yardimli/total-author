@@ -1,0 +1,1 @@
+<script>window.appTranslations = {{ Illuminate\Support\Js::from(array_intersect_key(array_replace(app('translation.loader')->load('en', '*', '*'), app('translation.loader')->load(app()->getLocale(), '*', '*')), array_flip(config('frontend_translations', [])))) }};</script>

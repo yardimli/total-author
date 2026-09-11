@@ -15,11 +15,11 @@ class OpenRouter
     {
         $model = collect(app(ModelCatalog::class)->get()['data'])->firstWhere('id', $id);
         if (! $model) {
-            throw ValidationException::withMessages(['model' => 'Select an available model. Refresh the catalog if needed.']);
+            throw ValidationException::withMessages(['model' => __('Select an available model. Refresh the catalog if needed.')]);
         }
         $outputs = $model['architecture']['output_modalities'] ?? [];
         if (stripos(($model['name'] ?? '').' '.$model['id'], 'batch') !== false || ! in_array('text', $outputs) || in_array('image', $outputs)) {
-            throw ValidationException::withMessages(['model' => 'Choose a text-output model without batch or image generation.']);
+            throw ValidationException::withMessages(['model' => __('Choose a text-output model without batch or image generation.')]);
         }
 
         return $model;
@@ -30,7 +30,7 @@ class OpenRouter
         $output = config('writer.max_output_tokens');
         // UTF-8 byte length is a conservative upper estimate for text tokens. Include framing overhead.
         $input = strlen(json_encode($messages, JSON_UNESCAPED_UNICODE)) + count($messages) * 64 + 1024;
-        abort_if($input + $output > ($model['context_length'] ?? 0), 422, 'This request may exceed the model context. Reduce history, select a larger model, or explicitly narrow the document scope. Nothing was sent.');
+        abort_if($input + $output > ($model['context_length'] ?? 0), 422, __('This request may exceed the model context. Reduce history, select a larger model, or explicitly narrow the document scope. Nothing was sent.'));
         $pricing = app(ModelPricing::class)->ceilings($model['pricing'] ?? []);
         // Text-only requests never enable search or send image/audio/video inputs.
         // Cache and reasoning allowances deliberately overestimate their token subsets.
@@ -41,8 +41,8 @@ class OpenRouter
         return DB::transaction(function () use ($user, $book, $model, $stage, $reserve) {
             $user = User::lockForUpdate()->findOrFail($user->id);
             $demo = ! $user->openrouter_key;
-            abort_if($demo && ! config('writer.openrouter_key'), 422, 'Add your OpenRouter API key in Account settings. The demo key is not configured.');
-            abort_if($demo && (float) $user->demo_spent + (float) $user->demo_reserved + $reserve > config('writer.demo_limit'), 422, 'This request exceeds your remaining $1 demo allowance. Choose a lower-cost model or add your own key.');
+            abort_if($demo && ! config('writer.openrouter_key'), 422, __('Add your OpenRouter API key in Account settings. The demo key is not configured.'));
+            abort_if($demo && (float) $user->demo_spent + (float) $user->demo_reserved + $reserve > config('writer.demo_limit'), 422, __('This request exceeds your remaining $1 demo allowance. Choose a lower-cost model or add your own key.'));
             if ($demo) {
                 $user->demo_reserved = (float) $user->demo_reserved + $reserve;
                 $user->save();
@@ -81,7 +81,7 @@ class OpenRouter
                 'usage' => ['include' => true],
             ];
             $call->update(['request_payload' => $payload]);
-            $response = Http::withToken($user->openrouter_key ?: config('writer.openrouter_key'))->timeout(120)->post(config('writer.openrouter_url').'/chat/completions', $payload);
+            $response = Http::withToken($user->openrouter_key ?: config('writer.openrouter_key'))->connectTimeout(15)->timeout(120)->post(config('writer.openrouter_url').'/chat/completions', $payload);
             $call->update(['response_body' => $response->body(), 'response_status' => $response->status()]);
             $body = $response->json();
             $tokens = [];
@@ -102,20 +102,22 @@ class OpenRouter
                 $this->settle($call, (float) $cost);
             }
             if (! $response->successful() || isset($body['error'])) {
-                throw new \RuntimeException('Provider failed');
+                throw new \RuntimeException(__('Provider failed'));
             }
             $text = $body['choices'][0]['message']['content'] ?? '';
             $text = preg_replace('/^```(?:json)?\s*|\s*```$/', '', trim($text));
             $json = json_decode($text, true, 64, JSON_THROW_ON_ERROR);
             if (! is_array($json)) {
-                throw new \RuntimeException('Invalid JSON');
+                throw new \RuntimeException(__('Invalid JSON'));
             }
 
             return $json;
         } catch (\Throwable $e) {
-            $call->update(['error' => isset($response) ? 'Provider error or invalid response JSON.' : 'Request failed before a response was received.']);
+            $call->update(['error' => isset($response) ? __('Provider error or invalid response JSON.') : __('Request failed before a response was received.')]);
             // Unknown billing outcomes keep their reservation. Never refund an uncertain paid request.
-            throw ValidationException::withMessages(['ai' => 'The AI request failed or returned invalid JSON. No changes were applied. Any uncertain cost remains reserved for reconciliation.']);
+            throw ValidationException::withMessages(['ai' => $e instanceof \Illuminate\Http\Client\ConnectionException
+                ? __('The AI connection timed out or was interrupted. You can send another message without refreshing. Any uncertain provider cost remains reserved.')
+                : __('The AI request failed or returned invalid JSON. No changes were applied. Any uncertain cost remains reserved for reconciliation.')]);
         }
     }
 

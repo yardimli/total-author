@@ -1,3 +1,5 @@
+import { thinkingProgress } from "./thinking-progress";
+import { t, locale } from "./i18n";
 import { showWritingWelcome } from "./writing-welcome";
 import { api, notify, $, element, action } from "./api";
 import { createEditor, fromText } from "./editor";
@@ -42,8 +44,7 @@ export async function start() {
         favorites = JSON.parse(root.dataset.favorites || "[]"),
         mentions = [],
         activeProposal = null,
-        busy = false,
-        uncertainRequest = null;
+        busy = false;
     const welcome = showWritingWelcome(model);
     const enqueue = (fn) => {
         const operation = writeChain.then(fn);
@@ -63,7 +64,9 @@ export async function start() {
             );
         } catch {
             notify(
-                "Browser draft storage is full. Keep this tab open until the server save completes.",
+                t(
+                    "Browser draft storage is full. Keep this tab open until the server save completes.",
+                ),
             );
         }
     }
@@ -71,7 +74,7 @@ export async function start() {
         dirty = true;
         changeVersion++;
         localDraft(doc);
-        status("Unsaved changes");
+        status(t("Unsaved changes"));
         clearTimeout(timer);
         timer = setTimeout(() => flush().catch((e) => notify(e.message)), 900);
     }
@@ -80,10 +83,12 @@ export async function start() {
             if (!dirty) return;
             if (conflicted)
                 throw new Error(
-                    "Resolve the save conflict before continuing. Your draft is stored in this browser.",
+                    t(
+                        "Resolve the save conflict before continuing. Your draft is stored in this browser.",
+                    ),
                 );
             const version = changeVersion;
-            status("Saving…");
+            status(t("Saving…"));
             try {
                 const result = await api(base, "PATCH", {
                     document: editor.view.state.doc.toJSON(),
@@ -93,14 +98,14 @@ export async function start() {
                 if (version === changeVersion) {
                     dirty = false;
                     localStorage.removeItem(draftKey);
-                    status("All changes saved");
+                    status(t("All changes saved"));
                 } else {
                     localDraft(editor.view.state.doc.toJSON());
-                    status("Saving new changes…");
+                    status(t("Saving new changes…"));
                 }
             } catch (e) {
                 if (e.status === 409) conflicted = true;
-                status("Save failed · local draft kept");
+                status(t("Save failed · local draft kept"));
                 throw e;
             }
         });
@@ -123,9 +128,11 @@ export async function start() {
                 if (dirty || codexDirty) {
                     conflicted = true;
                     fresh.book = { ...state.book };
-                    status("Conflict · local draft kept");
+                    status(t("Conflict · local draft kept"));
                     notify(
-                        "The book changed elsewhere while you were editing. Reload and review your recovered draft.",
+                        t(
+                            "The book changed elsewhere while you were editing. Reload and review your recovered draft.",
+                        ),
                     );
                 } else editor.load(fresh.book.document);
             }
@@ -138,11 +145,24 @@ export async function start() {
             render();
         });
     }
+    const codexType = (value) =>
+        [
+            "People",
+            "Places",
+            "Items",
+            "Organizations",
+            "Events",
+            "Lore",
+        ].includes(value)
+            ? t(value)
+            : value;
     function options(select, values, empty) {
         const old = select.value;
         select.replaceChildren();
         if (empty !== undefined) select.add(new Option(empty, ""));
-        values.forEach((v) => select.add(new Option(v.name ?? v, v.code ?? v)));
+        values.forEach((v) =>
+            select.add(new Option(v.name ?? codexType(v), v.code ?? v)),
+        );
         if ([...select.options].some((o) => o.value === old))
             select.value = old;
     }
@@ -151,10 +171,10 @@ export async function start() {
         $("#side-panel").inert = false;
         $("#side-panel").setAttribute("aria-hidden", "false");
         $("#panel-title").textContent = {
-            codex: "Your codex",
-            names: "Names & places",
-            details: "Book details",
-            history: "Revisions & chapters",
+            codex: t("Your codex"),
+            names: t("Names & places"),
+            details: t("Book details"),
+            history: t("Revisions & chapters"),
         }[name];
         document
             .querySelectorAll("[data-content]")
@@ -169,21 +189,25 @@ export async function start() {
         panel("codex");
         if (codexDirty) {
             notify(
-                "Finish saving the current codex draft before opening another entry.",
+                t(
+                    "Finish saving the current codex draft before opening another entry.",
+                ),
             );
             return;
         }
         const form = $("#entry-form");
         form.hidden = false;
         $("#codex-browser").hidden = true;
-        $("#panel-title").textContent = entry?.id ? "Edit entry" : "New entry";
+        $("#panel-title").textContent = entry?.id
+            ? t("Edit entry")
+            : t("New entry");
         form.reset();
         form.elements.id.value = entry?.id || "";
         form.elements.name.value = entry?.name || "";
         form.elements.type.value = entry?.type || state.book.codex_types[0];
         form.elements.aliases.value = (entry?.aliases || []).join(", ");
         form.elements.content.value = entry?.content || "";
-        $("#delete-entry").hidden = !entry;
+        $("#delete-entry").hidden = !Number.isSafeInteger(Number(entry?.id)) || Number(entry?.id) <= 0;
         form.scrollIntoView({ block: "nearest" });
     }
     editor = createEditor(
@@ -197,7 +221,9 @@ export async function start() {
                 showCodexList();
                 renderEntries(ids);
                 notify(
-                    "This alias matches several entries. Choose the intended entry below.",
+                    t(
+                        "This alias matches several entries. Choose the intended entry below.",
+                    ),
                 );
             }
         },
@@ -205,7 +231,10 @@ export async function start() {
             selectedEdit = scope;
             $("#selection-scope").hidden = !scope;
             $("#selection-preview").textContent = scope
-                ? `Editing selected text only: ${scope.text.slice(0, 120)}${scope.text.length > 120 ? "…" : ""}`
+                ? t("Editing selected text only: :v0:v1", {
+                      v0: scope.text.slice(0, 120),
+                      v1: scope.text.length > 120 ? "…" : "",
+                  })
                 : "";
         },
     );
@@ -217,7 +246,7 @@ export async function start() {
     function showCodexList() {
         $("#entry-form").hidden = true;
         $("#codex-browser").hidden = false;
-        $("#panel-title").textContent = "Your codex";
+        $("#panel-title").textContent = t("Your codex");
     }
     const collapsedCodexTypes = new Set();
     function renderEntries(ids) {
@@ -237,7 +266,9 @@ export async function start() {
             if (!group.length) continue;
             const section = element("details", undefined, "codex-group");
             section.open = !collapsedCodexTypes.has(type);
-            section.append(element("summary", `${type} · ${group.length}`));
+            section.append(
+                element("summary", `${codexType(type)} · ${group.length}`),
+            );
             section.addEventListener("toggle", () => {
                 if (!section.isConnected) return;
                 if (section.open) collapsedCodexTypes.delete(type);
@@ -256,7 +287,7 @@ export async function start() {
             list.append(
                 element(
                     "p",
-                    "No entries yet. Give your world a little detail.",
+                    t("No entries yet. Give your world a little detail."),
                     "muted",
                 ),
             );
@@ -286,10 +317,12 @@ export async function start() {
             const empty = element("div", undefined, "chat-empty");
             empty.append(
                 element("span", "✧"),
-                element("p", "Every good story starts with a conversation."),
+                element("p", t("Every good story starts with a conversation.")),
                 element(
                     "small",
-                    "Ask about a character, explore a scene, or bring your codex to life.",
+                    t(
+                        "Ask about a character, explore a scene, or bring your codex to life.",
+                    ),
                 ),
             );
             $("#chat-messages").append(empty);
@@ -297,7 +330,14 @@ export async function start() {
         const proposalButton = (proposal) => {
             const button = element(
                 "button",
-                `${proposal.status === "pending" ? "Review" : "View"} ${proposal.changes.length} changes · ${proposal.status} ↗`,
+                t(":v0 :v1 changes · :v2 ↗", {
+                    v0:
+                        t(proposal.status) === "pending"
+                            ? t("Review")
+                            : t("View"),
+                    v1: proposal.changes.length,
+                    v2: t(proposal.status),
+                }),
                 "chat-diff-link",
             );
             button.onclick = () => review(proposal);
@@ -312,31 +352,71 @@ export async function start() {
             item.append(
                 element(
                     "header",
-                    message.role === "user" ? "YOU" : "WRITING COMPANION",
+                    message.role === "user" ? t("YOU") : t("WRITING COMPANION"),
                 ),
                 element("div", message.content),
             );
-            for (const name of message.suggestions || []) {
-                const use = element("button", `Use ${name}`);
-                use.onclick = () => {
-                    const form = $("#entry-form");
-                    if (!form.hidden && form.elements.type.value === "Places") {
-                        form.elements.name.value = name;
-                        form.dispatchEvent(
+            // AI suggestions are display-only; never turn model output into UI actions.
+            if (message.role === "user" && message.status === "failed") {
+                const edit = element("button", "✎", "edit-failed-message");
+                edit.type = "button";
+                edit.title = t("Edit and resend failed message");
+                edit.setAttribute(
+                    "aria-label",
+                    t("Edit and resend failed message"),
+                );
+                edit.onclick = async () => {
+                    if (busy) return;
+                    const input = $("#chat-input");
+                    if (
+                        input.value.trim() &&
+                        input.value !== message.content &&
+                        !confirm(
+                            t(
+                                "Replace the current chat draft with this failed message?",
+                            ),
+                        )
+                    )
+                        return;
+                    busy = true;
+                    input.readOnly = true;
+                    $("#send-chat").disabled = true;
+                    edit.disabled = true;
+                    try {
+                        await api(`${base}/messages/${message.id}`, "DELETE");
+                        input.value = message.content;
+                        state.messages = state.messages.filter(
+                            (row) => row.id !== message.id,
+                        );
+                        item.remove();
+                        input.dispatchEvent(
                             new Event("input", { bubbles: true }),
                         );
-                        panel("codex");
-                    } else openEntry({ name, type: "Places", aliases: [] });
-                    $("#chat-input").value =
-                        `Create a Places codex entry named "${name}" for this book.`;
-                    notify(
-                        "Name selected. Write the description yourself or send the prepared chat request.",
-                    );
+                    } catch (error) {
+                        notify(error.message);
+                    } finally {
+                        busy = false;
+                        input.readOnly = false;
+                        $("#send-chat").disabled = false;
+                        edit.disabled = false;
+                        input.focus();
+                        input.setSelectionRange(
+                            input.value.length,
+                            input.value.length,
+                        );
+                    }
                 };
-                item.append(use);
+                item.querySelector("header").append(edit);
             }
-            const remove = element("button", "Delete", "delete-chat-message");
-            remove.setAttribute("aria-label", `Delete ${message.role} message`);
+            const remove = element(
+                "button",
+                t("Delete"),
+                "delete-chat-message",
+            );
+            remove.setAttribute(
+                "aria-label",
+                t("Delete :v0 message", { v0: t(message.role) }),
+            );
             remove.onclick = async () => {
                 remove.disabled = true;
                 try {
@@ -358,6 +438,7 @@ export async function start() {
         $("#proposal-list").replaceChildren();
         for (const proposal of state.proposals.filter(
             (proposal) =>
+                proposal.status !== "rejected" &&
                 !state.messages.some(
                     (message) => message.id === proposal.chat_message_id,
                 ),
@@ -365,7 +446,7 @@ export async function start() {
             const item = element("article", undefined, "message assistant");
             item.dataset.created = proposal.created_at;
             item.append(
-                element("header", "AI CHANGES · ORIGINAL REPLY UNAVAILABLE"),
+                element("header", t("AI CHANGES · ORIGINAL REPLY UNAVAILABLE")),
                 proposalButton(proposal),
             );
             const next = [...$("#chat-messages").children].find(
@@ -380,14 +461,23 @@ export async function start() {
         for (const revision of state.revisions) {
             const button = element(
                 "button",
-                `${revision.label} · ${new Date(revision.created_at).toLocaleString()}`,
+                `${t(revision.label)} · ${new Date(revision.created_at).toLocaleString(locale())}`,
             );
             button.onclick = () =>
                 inspectRevision(revision).catch((e) => notify(e.message));
             $("#revision-list").append(button);
         }
-        $("#usage").textContent =
-            `Book ${money(state.usage.book)} · Account ${money(state.usage.account)} · Demo left ${money(state.usage.demo_remaining)}${Number(state.usage.pending) ? " · Pending " + money(state.usage.pending) : ""}`;
+        $("#usage").textContent = t(
+            "Book :v0 · Account :v1 · Demo left :v2:v3",
+            {
+                v0: money(state.usage.book),
+                v1: money(state.usage.account),
+                v2: money(state.usage.demo_remaining),
+                v3: Number(state.usage.pending)
+                    ? t(" · Pending ") + money(state.usage.pending)
+                    : "",
+            },
+        );
     }
     let inspectedRevision = null;
     async function inspectRevision(revision) {
@@ -395,7 +485,7 @@ export async function start() {
             await saveEntry();
             if (codexDirty)
                 throw new Error(
-                    "Finish the codex entry before comparing revisions.",
+                    t("Finish the codex entry before comparing revisions."),
                 );
         }
         await flush();
@@ -412,11 +502,15 @@ export async function start() {
             (sum, part) => sum + part.removed,
             0,
         );
-        $("#revision-diff-title").textContent = revision.label;
-        $("#revision-diff-date").textContent =
-            `${new Date(revision.created_at).toLocaleString()} → current version ${state.book.revision}`;
-        $("#revision-diff-count").textContent =
-            `${totalAdded + totalRemoved} total changed lines · +${totalAdded} added / −${totalRemoved} removed`;
+        $("#revision-diff-title").textContent = t(revision.label);
+        $("#revision-diff-date").textContent = t(":v0 → current version :v1", {
+            v0: new Date(revision.created_at).toLocaleString(locale()),
+            v1: state.book.revision,
+        });
+        $("#revision-diff-count").textContent = t(
+            ":v0 total changed lines · +:v1 added / −:v2 removed",
+            { v0: totalAdded + totalRemoved, v1: totalAdded, v2: totalRemoved },
+        );
         const body = $("#revision-diff-content");
         body.replaceChildren();
         for (const section of sections) {
@@ -424,11 +518,16 @@ export async function start() {
             group.append(
                 element(
                     "h3",
-                    `${section.name} · ${section.added + section.removed} changed lines (+${section.added} / −${section.removed})`,
+                    t(":v0 · :v1 changed lines (+:v2 / −:v3)", {
+                        v0: section.name,
+                        v1: section.added + section.removed,
+                        v2: section.added,
+                        v3: section.removed,
+                    }),
                 ),
             );
             if (!section.hunks.length)
-                group.append(element("p", "No changes.", "muted"));
+                group.append(element("p", t("No changes."), "muted"));
             for (const hunk of section.hunks) {
                 group.append(
                     element(
@@ -473,7 +572,9 @@ export async function start() {
         if (
             !inspectedRevision ||
             !confirm(
-                "Restore this manuscript and codex snapshot? The current version will be saved first.",
+                t(
+                    "Restore this manuscript and codex snapshot? The current version will be saved first.",
+                ),
             )
         )
             return;
@@ -486,13 +587,13 @@ export async function start() {
             );
             await refresh(true);
             $("#revision-diff-dialog").close();
-            notify("Revision restored.");
+            notify(t("Revision restored."));
         } finally {
             editor.view.setProps({ editable: () => true });
         }
     });
     render();
-    status("All changes saved");
+    status(t("All changes saved"));
     const recovered = JSON.parse(localStorage.getItem(draftKey) || "null");
     if (
         recovered &&
@@ -537,8 +638,8 @@ export async function start() {
         $("#selected-last-name").value = split < 0 ? "" : full.slice(split + 1);
         $("#name-results").replaceChildren();
         $("#names-title").textContent = full
-            ? `Names & places · ${full}`
-            : "Names & places · New entry";
+            ? t("Names & places · :v0", { v0: full })
+            : t("Names & places · New entry");
         $("#names-dialog").showModal();
     });
     action("#open-custom-type", () => {
@@ -558,13 +659,14 @@ export async function start() {
         const version = codexVersion,
             data = Object.fromEntries(new FormData(form));
         codexSaving = (async () => {
-            status("Saving codex…");
+            status(t("Saving codex…"));
             const result = await mutate(
                 `${base}/entries${data.id ? "/" + data.id : ""}`,
                 "POST",
                 data,
             );
             form.elements.id.value = result.entry.id;
+            $("#delete-entry").hidden = false;
             if (version === codexVersion) {
                 codexDirty = false;
                 localStorage.removeItem(codexDraftKey);
@@ -580,7 +682,11 @@ export async function start() {
                 );
             }
             await refresh();
-            status(dirty ? "Unsaved manuscript changes" : "All changes saved");
+            status(
+                dirty
+                    ? t("Unsaved manuscript changes")
+                    : t("All changes saved"),
+            );
         })();
         try {
             await codexSaving;
@@ -601,7 +707,7 @@ export async function start() {
         () => {
             codexDirty = true;
             codexVersion++;
-            status("Codex draft unsaved");
+            status(t("Codex draft unsaved"));
             localStorage.setItem(
                 codexDraftKey,
                 JSON.stringify(
@@ -613,7 +719,7 @@ export async function start() {
                 codexTimer = setTimeout(
                     () =>
                         saveEntry().catch((e) => {
-                            status("Codex save failed · local draft kept");
+                            status(t("Codex save failed · local draft kept"));
                             notify(e.message);
                         }),
                     1000,
@@ -629,24 +735,38 @@ export async function start() {
         codexDirty = true;
         codexVersion++;
         $("#codex-recovery").hidden = true;
-        notify("Draft restored to the form. Review it and choose Save entry.");
+        notify(
+            t("Draft restored to the form. Review it and choose Save entry."),
+        );
     });
     action("#discard-codex", () => {
         localStorage.removeItem(codexDraftKey);
         $("#codex-recovery").hidden = true;
     });
     action("#delete-entry", async () => {
+        clearTimeout(codexTimer);
+        if (codexSaving) await codexSaving;
+        const id = Number($("#entry-form").elements.id.value);
+        if (!Number.isSafeInteger(id) || id <= 0) {
+            $("#delete-entry").hidden = true;
+            return;
+        }
         if (
             !confirm(
-                "Delete this entry? Its manuscript words will remain. You can restore it from revisions.",
+                t(
+                    "Delete this entry? Its manuscript words will remain. You can restore it from revisions.",
+                ),
             )
         )
             return;
         await mutate(
-            `${base}/entries/${$("#entry-form").elements.id.value}`,
+            `${base}/entries/${id}`,
             "DELETE",
             {},
         );
+        codexDirty = false;
+        codexVersion++;
+        localStorage.removeItem(codexDraftKey);
         await refresh();
         showCodexList();
     });
@@ -687,7 +807,7 @@ export async function start() {
             });
             detailsDirty = false;
             await refresh();
-            notify("Book details saved.");
+            notify(t("Book details saved."));
         },
         "submit",
     );
@@ -707,20 +827,26 @@ export async function start() {
         });
         $("#catalog-status").textContent =
             catalog.error ||
-            `Updated ${catalog.refreshed_at ? new Date(catalog.refreshed_at).toLocaleString() : "not yet"}`;
+            t("Updated :v0", {
+                v0: catalog.refreshed_at
+                    ? new Date(catalog.refreshed_at).toLocaleString(locale())
+                    : t("not yet"),
+            });
         renderModels();
     }
     function renderModels() {
         const selected = models.find((m) => m.id === model);
         welcome.setModel(
             selected?.name ||
-                (model ? `${model} (currently unavailable)` : null),
+                (model
+                    ? t(":v0 (currently unavailable)", { v0: model })
+                    : null),
         );
         $("#model-summary").textContent = selected
-            ? `Writing with ${selected.name}`
+            ? t("Writing with :v0", { v0: selected.name })
             : model
-              ? "Saved model unavailable — choose another"
-              : "Choose an AI model";
+              ? t("Saved model unavailable — choose another")
+              : t("Choose an AI model");
         $("#model-list").replaceChildren();
         const q = $("#model-search").value.toLowerCase(),
             only = $("#favorites-only").checked;
@@ -740,7 +866,9 @@ export async function start() {
             $("#model-list").append(
                 element(
                     "p",
-                    "Enter a nonnegative price range with Min no greater than Max.",
+                    t(
+                        "Enter a nonnegative price range with Min no greater than Max.",
+                    ),
                 ),
             );
             return;
@@ -758,8 +886,12 @@ export async function start() {
                 element(
                     "p",
                     only
-                        ? "No favorites yet. Uncheck Favorites only and star a model."
-                        : "No models match this search and output price range.",
+                        ? t(
+                              "No favorites yet. Uncheck Favorites only and star a model.",
+                          )
+                        : t(
+                              "No models match this search and output price range.",
+                          ),
                 ),
             );
         for (const item of matches) {
@@ -782,8 +914,13 @@ export async function start() {
                 element(
                     "small",
                     bounded
-                        ? `${money(Number(item.pricing.prompt) * 1e6)} in / ${money(Number(item.pricing.completion) * 1e6)} out per 1M tokens`
-                        : "Variable pricing · cannot safely budget this model",
+                        ? t(":v0 in / :v1 out per 1M tokens", {
+                              v0: money(Number(item.pricing.prompt) * 1e6),
+                              v1: money(Number(item.pricing.completion) * 1e6),
+                          })
+                        : t(
+                              "Variable pricing · cannot safely budget this model",
+                          ),
                 ),
             );
             pick.disabled =
@@ -799,7 +936,10 @@ export async function start() {
                     notify(e.message);
                 }
             };
-            star.setAttribute("aria-label", `Favorite ${item.name}`);
+            star.setAttribute(
+                "aria-label",
+                t("Favorite :v0", { v0: item.name }),
+            );
             star.onclick = async () => {
                 try {
                     const next = favorites.includes(item.id)
@@ -833,7 +973,7 @@ export async function start() {
     loadModels().catch((e) => notify(e.message));
     async function send(message, extra = {}) {
         if (busy) return;
-        if (!model) throw new Error("Choose an AI model first.");
+        if (!model) throw new Error(t("Choose an AI model first."));
         if (codexDirty) await saveEntry();
         await flush();
         const previousProposals = new Set(
@@ -849,21 +989,11 @@ export async function start() {
         $("#chat-input").readOnly = true;
         $("#ai-thinking-status").hidden = false;
         $("#send-chat").disabled = true;
-        $("#send-chat").textContent = "Thinking…";
-        const fingerprint = JSON.stringify({
-            message,
-            model,
-            extra,
-            mentions,
-            history: $("#chat-history").value,
-            names: currentCodexNames(),
-            selection,
-            cursor,
-        });
-        const requestId =
-            uncertainRequest?.fingerprint === fingerprint
-                ? uncertainRequest.id
-                : crypto.randomUUID();
+        $("#send-chat").textContent = t("Thinking…");
+        $("#send-chat").classList.add("is-thinking");
+        $("#ai-thinking-status").classList.add("is-thinking");
+        $("#chat-form").setAttribute("aria-busy", "true");
+        const requestId = crypto.randomUUID();
         try {
             const payload = {
                 message,
@@ -876,11 +1006,20 @@ export async function start() {
                 cursor,
                 ...extra,
             };
-            const result = await api(`${base}/chat`, "POST", payload);
+            const call = async (data) => {
+                const stop = thinkingProgress();
+                try {
+                    // Classification and execution each have a 120-second provider timeout.
+                    return await api(`${base}/chat`, "POST", data, 270000);
+                } finally {
+                    stop();
+                }
+            };
+            const result = await call(payload);
             if (result.large_prompt_warning) {
                 const dialog = $("#large-prompt-dialog");
                 $("#large-prompt-count").textContent =
-                    result.word_count.toLocaleString();
+                    result.word_count.toLocaleString(locale());
                 $("#disable-large-prompt-warning").checked = false;
                 dialog.returnValue = "cancel";
                 const confirmed = await new Promise((resolve) => {
@@ -892,7 +1031,7 @@ export async function start() {
                     dialog.showModal();
                 });
                 if (!confirmed) return;
-                await api(`${base}/chat`, "POST", {
+                await call({
                     ...payload,
                     force_large_prompt: true,
                     disable_large_prompt_warning: $(
@@ -900,32 +1039,27 @@ export async function start() {
                     ).checked,
                 });
             }
-            uncertainRequest = null;
             $("#chat-input").value = "";
             mentions = [];
             renderMentions();
-        } catch (error) {
-            if (!error.status || error.status >= 500)
-                uncertainRequest = { fingerprint, id: requestId };
-            else if (error.status !== 409) uncertainRequest = null;
-            throw error;
         } finally {
-            try {
-                await refresh();
-            } finally {
-                busy = false;
-                editor.setReadOnly(false);
-                $("#chat-input").readOnly = false;
-                $("#ai-thinking-status").hidden = true;
-                $("#send-chat").disabled = false;
-                $("#send-chat").textContent = "Send ↗";
-            }
+            // Unlock immediately; a slow state refresh must not keep the inputs frozen.
+            busy = false;
+            editor.setReadOnly(false);
+            $("#chat-input").readOnly = false;
+            $("#ai-thinking-status").hidden = true;
+            $("#send-chat").disabled = false;
+            $("#send-chat").textContent = t("Send ↗");
+            $("#send-chat").classList.remove("is-thinking");
+            $("#ai-thinking-status").classList.remove("is-thinking");
+            $("#chat-form").setAttribute("aria-busy", "false");
+            await refresh().catch((error) => notify(error.message));
             const next = state.proposals.find(
                 (proposal) =>
                     proposal.status === "pending" &&
                     !previousProposals.has(proposal.id),
             );
-            if (next) review(next);
+            if (next && !busy) review(next);
         }
     }
     action(
@@ -992,8 +1126,8 @@ export async function start() {
         const block = element("div", undefined, "diff-columns"),
             left = element("div", undefined, "diff-text"),
             right = element("div", undefined, "diff-text");
-        left.append(element("h4", "Original"));
-        right.append(element("h4", "Proposed"));
+        left.append(element("h4", t("Original")));
+        right.append(element("h4", t("Proposed")));
         for (const part of diffWordsWithSpace(before, after)) {
             if (!part.added)
                 left.append(element(part.removed ? "del" : "span", part.value));
@@ -1010,10 +1144,17 @@ export async function start() {
         $("#reject-changes").hidden = historical;
         $("#diff-content").replaceChildren();
         $("#review-description").textContent = historical
-            ? `Previously ${proposal.status}. Checked changes were applied; unchecked changes were not applied.`
+            ? t(
+                  "Previously :v0. Checked changes were applied; unchecked changes were not applied.",
+                  { v0: t(proposal.status) },
+              )
             : proposal.base_revision === state.book.revision
-              ? "Review additions, removals and replacements. Only checked changes will be saved."
-              : "This proposal is based on an older revision. Reject it and request a new proposal to protect your latest work.";
+              ? t(
+                    "Review additions, removals and replacements. Only checked changes will be saved.",
+                )
+              : t(
+                    "This proposal is based on an older revision. Reject it and request a new proposal to protect your latest work.",
+                );
         $("#approve-changes").disabled =
             proposal.base_revision !== state.book.revision;
         proposal.changes.forEach((change, index) => {
@@ -1030,10 +1171,13 @@ export async function start() {
                 check,
                 document.createTextNode(
                     change.operation === "selection_replace"
-                        ? "Selected text only"
+                        ? t("Selected text only")
                         : change.operation === "manuscript_replace"
-                          ? `Manuscript · paragraphs ${change.start_block + 1}–${change.end_block}`
-                          : `${change.name} · ${change.type}`,
+                          ? t("Manuscript · paragraphs :v0–:v1", {
+                                v0: change.start_block + 1,
+                                v1: change.end_block,
+                            })
+                          : `${change.name} · ${codexType(change.type)}`,
                 ),
             );
             section.append(label);
@@ -1046,7 +1190,17 @@ export async function start() {
             else
                 for (const field of ["name", "type", "content", "aliases"]) {
                     section.append(
-                        element("small", field),
+                        element(
+                            "small",
+                            t(
+                                {
+                                    name: "Name",
+                                    type: "Type",
+                                    content: "Description",
+                                    aliases: "Aliases",
+                                }[field],
+                            ),
+                        ),
                         diffText(
                             Array.isArray(change.before?.[field])
                                 ? change.before[field].join(", ")
@@ -1074,8 +1228,10 @@ export async function start() {
             await refresh(true);
             notify(
                 accept.length
-                    ? "Approved changes saved. The previous version is in Revisions."
-                    : "Proposal rejected.",
+                    ? t(
+                          "Approved changes saved. The previous version is in Revisions.",
+                      )
+                    : t("Proposal rejected."),
             );
         } finally {
             editor.view.setProps({ editable: () => true });
@@ -1106,10 +1262,10 @@ export async function start() {
             ]
                 .filter(Boolean)
                 .join(" ");
-            if (!name) throw new Error("Select or enter a name first.");
+            if (!name) throw new Error(t("Select or enter a name first."));
             if (name.length > 200)
                 throw new Error(
-                    "The full name must be 200 characters or fewer.",
+                    t("The full name must be 200 characters or fewer."),
                 );
             $("#entry-form").elements.name.value = name;
             $("#entry-form").dispatchEvent(
@@ -1123,7 +1279,7 @@ export async function start() {
         .then((countries) => {
             options($("#first-country"), countries);
             options($("#last-country"), countries);
-            options($("#place-country"), countries, "Any country");
+            options($("#place-country"), countries, t("Any country"));
             $("#first-country").value = "US";
             $("#last-country").value = "US";
         })
@@ -1139,10 +1295,10 @@ export async function start() {
         const data = await api("/api/names?" + params);
         $("#name-results").replaceChildren();
         for (const [title, rows] of random
-            ? [["Full names", data.results]]
+            ? [[t("Full names"), data.results]]
             : [
-                  ["First names", data.first],
-                  ["Last names", data.last],
+                  [t("First names"), data.first],
+                  [t("Last names"), data.last],
               ]) {
             $("#name-results").append(element("h3", title));
             for (const row of rows) {
@@ -1153,7 +1309,7 @@ export async function start() {
                         $("#selected-last-name").value = row.last_name;
                     } else
                         $(
-                            title === "First names"
+                            title === t("First names")
                                 ? "#selected-first-name"
                                 : "#selected-last-name",
                         ).value = row.name;
@@ -1167,9 +1323,11 @@ export async function start() {
     action("#suggest-places", async () => {
         const prompt = $("#place-prompt").value.trim();
         if (!prompt)
-            throw new Error("Enter a guiding prompt for the place names.");
+            throw new Error(t("Enter a guiding prompt for the place names."));
         closePanel();
-        $("#chat-input").value = `Suggest 10 place names: ${prompt}`;
+        $("#chat-input").value = t("Suggest 10 place names: :v0", {
+            v0: prompt,
+        });
         $("#names-dialog").close();
         await send($("#chat-input").value, {
             action: "places",
@@ -1178,8 +1336,9 @@ export async function start() {
     });
     action("#scan-document", async () => {
         closePanel();
-        $("#chat-input").value =
-            "Scan this document to create or update codex entries for its people, places and things. Preserve existing names and flag uncertain details.";
+        $("#chat-input").value = t(
+            "Scan this document to create or update codex entries for its people, places and things. Preserve existing names and flag uncertain details.",
+        );
         await send($("#chat-input").value, { action: "scan" });
     });
     action("#import-button", () => {
@@ -1194,7 +1353,7 @@ export async function start() {
             recoveryDocument = null;
             if (!file) return;
             if (file.size > 10 * 1024 * 1024)
-                throw new Error("Please import a file smaller than 10 MB.");
+                throw new Error(t("Please import a file smaller than 10 MB."));
             $("#confirm-import").disabled = true;
             let text;
             if (file.name.toLowerCase().endsWith(".docx")) {
@@ -1206,7 +1365,7 @@ export async function start() {
                 ).value;
             } else if (file.name.toLowerCase().endsWith(".txt"))
                 text = await file.text();
-            else throw new Error("Choose a TXT or DOCX story.");
+            else throw new Error(t("Choose a TXT or DOCX story."));
             $("#import-preview").value = text;
             $("#confirm-import").disabled = false;
         },
@@ -1226,7 +1385,9 @@ export async function start() {
             await refresh(true);
             $("#import-dialog").close();
             notify(
-                "Story imported. Open Codex to scan the document for entries.",
+                t(
+                    "Story imported. Open Codex to scan the document for entries.",
+                ),
             );
         } finally {
             editor.view.setProps({ editable: () => true });

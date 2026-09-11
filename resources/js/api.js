@@ -1,30 +1,53 @@
-export async function api(url, method = "GET", body) {
-    const response = await fetch(url, {
-        method,
-        credentials: "same-origin",
-        headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
-                .content,
-        },
-        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-    });
-    const data = await response.json().catch(() => ({
-        message: "The server returned an unexpected response.",
-    }));
-    if (!response.ok) {
-        const error = new Error(
-            Object.values(data.errors || {})
-                .flat()
-                .join(" ") ||
-                data.message ||
-                "Request failed",
-        );
-        error.status = response.status;
+import { t, locale } from "./i18n";
+export async function api(url, method = "GET", body, timeout = 120000) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
+    try {
+        const response = await fetch(url, {
+            method,
+            credentials: "same-origin",
+            signal: controller.signal,
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": document.querySelector(
+                    'meta[name="csrf-token"]',
+                ).content,
+            },
+            ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+        });
+        const data = await response.json().catch((error) => {
+            if (controller.signal.aborted) throw error;
+            return {
+                message: t("The server returned an unexpected response."),
+            };
+        });
+        if (!response.ok) {
+            const error = new Error(
+                Object.values(data.errors || {})
+                    .flat()
+                    .join(" ") ||
+                    data.message ||
+                    t("Request failed"),
+            );
+            error.status = response.status;
+            throw error;
+        }
+        return data;
+    } catch (error) {
+        if (controller.signal.aborted) {
+            const timeoutError = new Error(
+                t(
+                    "The request timed out. You can try sending again without refreshing.",
+                ),
+            );
+            timeoutError.status = 408;
+            throw timeoutError;
+        }
         throw error;
+    } finally {
+        clearTimeout(timer);
     }
-    return data;
 }
 export function notify(message) {
     const box = document.querySelector("#toast");

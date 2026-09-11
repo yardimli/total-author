@@ -1,3 +1,4 @@
+import { t, locale } from "./i18n";
 import { structuredPatch } from "diff";
 
 // Markdown makes prose, headings, and inline formatting readable in a line diff.
@@ -45,13 +46,15 @@ export function revisionDiff(before, after) {
             name,
             oldText,
             newText,
-            "Revision",
-            "Current",
+            t("Revision"),
+            t("Current"),
             { context: 3, timeout: 1500 },
         );
         if (!patch)
             throw new Error(
-                "This revision is too large to compare interactively. No changes were made.",
+                t(
+                    "This revision is too large to compare interactively. No changes were made.",
+                ),
             );
         const lines = patch.hunks.flatMap((hunk) => hunk.lines);
         const added = lines.filter((line) => line.startsWith("+")).length;
@@ -59,7 +62,7 @@ export function revisionDiff(before, after) {
         sections.push({ name, hunks: patch.hunks, added, removed });
     };
     compare(
-        "Manuscript",
+        t("Manuscript"),
         manuscript(before.document),
         manuscript(after.document),
     );
@@ -73,7 +76,7 @@ export function revisionDiff(before, after) {
             null,
             2,
         );
-    compare("Book details & codex types", settings(before), settings(after));
+    compare(t("Book details & codex types"), settings(before), settings(after));
     const entries = (value) =>
         JSON.stringify(
             (value.entries || [])
@@ -88,6 +91,6 @@ export function revisionDiff(before, after) {
             null,
             2,
         );
-    compare("Codex entries", entries(before), entries(after));
+    compare(t("Codex entries"), entries(before), entries(after));
     return sections;
 }

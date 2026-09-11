@@ -17,14 +17,14 @@ class ModelCatalog
         try {
             $models = Http::timeout(15)->get(config('writer.openrouter_url').'/models')->throw()->json('data');
             if (! is_array($models)) {
-                throw new \RuntimeException('Invalid catalog');
+                throw new \RuntimeException(__('Invalid catalog'));
             }
             $catalog = ['data' => $models, 'refreshed_at' => now()->toIso8601String()];
             Cache::forever('openrouter.catalog', $catalog);
 
             return $catalog;
         } catch (\Throwable $e) {
-            return $this->get() + ['error' => 'The model catalog could not refresh. Showing the last successful catalog.'];
+            return $this->get() + ['error' => __('The model catalog could not refresh. Showing the last successful catalog.')];
         }
     }
 }

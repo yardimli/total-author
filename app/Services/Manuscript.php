@@ -78,7 +78,7 @@ class Manuscript
         };
         $walk($doc);
         if (! $valid) {
-            throw ValidationException::withMessages(['document' => 'Invalid manuscript structure.']);
+            throw ValidationException::withMessages(['document' => __('Invalid manuscript structure.')]);
         }
     }
 
@@ -92,6 +92,6 @@ class Manuscript
 
     public static function checkRevision(Book $book, int $revision): void
     {
-        abort_if($book->revision !== $revision, 409, 'This book changed in another tab or operation. Reload the latest version before saving. Your local draft is preserved.');
+        abort_if($book->revision !== $revision, 409, __('This book changed in another tab or operation. Reload the latest version before saving. Your local draft is preserved.'));
     }
 }

@@ -14,3 +14,10 @@ These are real browser PNG captures, not HTML mockups or generated artwork. Full
 - llm-log.png: the book’s real LLM call history
 
 Recapture these files from the app when the interface changes. Never put credentials or session cookies in this directory.
+
+## Turkish screenshots
+
+Captured from book 3, Bir varmış bir yokmuş, through normal account login in the Turkish UI. The eight -TR.png files match the English screenshot viewports and dialog crops, using Paper mode and the book's existing chat, codex, and approved revision history. These are direct browser PNG captures; no manuscript changes or AI calls were made. The landing page selects these files for the tr locale and keeps unsuffixed English files for en.
+
+
+Turkish assets recaptured with Net Kitap branding and the NK raster logo on 2026-09-12. All eight views retain the same capture dimensions. Dialog crops intentionally include only the actual dialog, matching the English set.

@@ -61,6 +61,13 @@ class BookController extends Controller
     {
         $this->owned($request, $book);
 
+        // A pending request with no process holding the book lock ended unexpectedly.
+        $lock = new \App\Services\BookChatLock;
+        if ($lock->acquire($book->id)) {
+            try { $book->messages()->where('role', 'user')->where('status', 'pending')->update(['status' => 'failed']); }
+            finally { $lock->release(); }
+        }
+
         return response()->json(['book' => $book, 'entries' => $book->entries()->orderBy('name')->get(),
             'messages' => $book->messages()->orderBy('id')->get(), 'proposals' => $book->proposals()->orderBy('id')->get(),
             'revisions' => $book->revisions()->latest('id')->limit(100)->get(['id', 'label', 'created_at']),
@@ -84,7 +91,7 @@ class BookController extends Controller
             Manuscript::checkRevision($book, (int) $data['revision']);
             Manuscript::snapshot($book, isset($data['document']) ? 'Manuscript save' : 'Book settings');
             if (isset($data['codex_types'])) {
-                abort_if($book->entries()->whereNotIn('type', $data['codex_types'])->exists(), 422, 'Move entries to another type before removing their type.');
+                abort_if($book->entries()->whereNotIn('type', $data['codex_types'])->exists(), 422, __('Move entries to another type before removing their type.'));
             }
             $book->fill($data);
             if (isset($data['document'])) {
@@ -203,7 +210,7 @@ class BookController extends Controller
         return DB::transaction(function () use ($book, $data, $id) {
             $book = Book::lockForUpdate()->findOrFail($book->id);
             Manuscript::checkRevision($book, (int) $data['revision']);
-            abort_unless(in_array($data['type'], $book->codex_types), 422, 'Add the codex type first.');
+            abort_unless(in_array($data['type'], $book->codex_types), 422, __('Add the codex type first.'));
             Manuscript::snapshot($book, 'Codex edit');
             $entry = $id ? $book->entries()->findOrFail($id) : new CodexEntry(['book_id' => $book->id]);
             $entry->fill(collect($data)->except('revision')->all());

@@ -26,16 +26,16 @@ class GoogleLoginController extends Controller
         try {
             $profile = Socialite::driver('google')->user();
         } catch (\Throwable $e) {
-            return redirect()->route('login')->withErrors(['google' => 'Google sign-in was cancelled or expired. Please try again.']);
+            return redirect()->route('login')->withErrors(['google' => __('Google sign-in was cancelled or expired. Please try again.')]);
         }
         $email = Str::lower($profile->getEmail() ?? '');
         if (! $profile->getId() || ! filter_var($email, FILTER_VALIDATE_EMAIL) || ! ($profile->user['email_verified'] ?? $profile->user['verified_email'] ?? false)) {
-            return redirect()->route('login')->withErrors(['google' => 'Google must provide a verified email address.']);
+            return redirect()->route('login')->withErrors(['google' => __('Google must provide a verified email address.')]);
         }
         $user = User::where('google_id', $profile->getId())->first();
         if (! $user) {
             if (User::where('email', $email)->exists()) {
-                return redirect()->route('login')->withErrors(['google' => 'An account already uses this email. Please sign in with its password.']);
+                return redirect()->route('login')->withErrors(['google' => __('An account already uses this email. Please sign in with its password.')]);
             }
             $user = new User(['name' => Str::limit($profile->getName() ?: $email, 255, ''), 'email' => $email, 'password' => Hash::make(Str::random(64))]);
             $user->google_id = $profile->getId();

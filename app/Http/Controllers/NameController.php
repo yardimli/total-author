@@ -12,7 +12,7 @@ class NameController extends Controller
         $countries = [];
         foreach (glob(base_path('data/names_by_country/*_first_names.json')) as $path) {
             $code = explode('_', basename($path))[0];
-            $countries[] = ['code' => $code, 'name' => Countries::exists($code) ? Countries::getName($code, 'en') : $code];
+            $countries[] = ['code' => $code, 'name' => Countries::exists($code) ? Countries::getName($code, app()->getLocale()) : $code];
         }
         usort($countries, fn ($a, $b) => strcmp($a['name'], $b['name']));
 
@@ -22,7 +22,7 @@ class NameController extends Controller
     private function names(string $country, string $kind): array
     {
         $path = base_path("data/names_by_country/{$country}_{$kind}_names.json");
-        abort_unless(is_file($path), 422, 'No name dataset exists for that country.');
+        abort_unless(is_file($path), 422, __('No name dataset exists for that country.'));
 
         return json_decode(file_get_contents($path), true, 512, JSON_THROW_ON_ERROR)['names'];
     }
@@ -34,7 +34,7 @@ class NameController extends Controller
         $first = array_values(array_filter($this->names($data['country'], 'first'), fn ($n) => empty($data['gender']) || ($n['gender'] ?? '') === $data['gender']));
         $last = $this->names($data['last_country'] ?? $data['country'], 'last');
         if ($request->boolean('random')) {
-            abort_if(! $first || ! $last, 422, 'No names match these filters.');
+            abort_if(! $first || ! $last, 422, __('No names match these filters.'));
             $results = [];
             $count = min($data['count'] ?? 10, count($first) * count($last));
             for ($i = 0; count($results) < $count && $i < $count * 20; $i++) {

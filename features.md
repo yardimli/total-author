@@ -84,3 +84,5 @@ Inventory of implemented features, 11 September 2026. This describes the current
 - Generic privacy and terms pages linked from the footer.
 
 - Members who have not configured favorites receive matching starter models from config/default_favorites.php when opening their writing page. Initialization runs once and preserves later removals.
+
+- English (default) and Turkish interface languages, including Blade pages, JavaScript controls, validation, server messages, and account emails. Account and guest language preferences persist; manuscript and codex content retain their original language.

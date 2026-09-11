@@ -1,1 +1,1 @@
-@include('auth.form', ['heading'=>'Every story needs a beginning.','intro'=>'Make a little space for your next book.','action'=>'register','kind'=>'register','button'=>'Create your writing desk'])
+@include('auth.form', ['heading'=>__('Every story needs a beginning.'),'intro'=>__('Make a little space for your next book.'),'action'=>'register','kind'=>'register','button'=>__('Create your writing desk')])

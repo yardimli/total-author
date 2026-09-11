@@ -1,1 +1,1 @@
-@include('auth.form', ['heading'=>'Welcome back.','intro'=>'Your stories are right where you left them.','action'=>'login','kind'=>'login','button'=>'Return to your desk'])
+@include('auth.form', ['heading'=>__('Welcome back.'),'intro'=>__('Your stories are right where you left them.'),'action'=>'login','kind'=>'login','button'=>__('Return to your desk')])

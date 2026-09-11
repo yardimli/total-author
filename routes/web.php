@@ -19,11 +19,15 @@ Route::get('/sitemap.xml', function () {
     }
     return response($xml.'</urlset>', 200)->header('Content-Type', 'application/xml; charset=UTF-8');
 });
+Route::post('/language', [\App\Http\Controllers\LanguageController::class, 'update'])->name('language.update');
 Route::view('/', 'welcome')->name('home');
 Route::view('/privacy', 'legal.privacy')->name('privacy');
 Route::view('/terms', 'legal.terms')->name('terms');
 Route::post('/contact', [\App\Http\Controllers\ContactController::class, 'store'])->middleware('throttle:5,1')->name('contact.store');
 Route::middleware('auth')->group(function () {
+    Route::get('/admin/users', [\App\Http\Controllers\AdminController::class, 'index'])->name('admin.users');
+    Route::post('/admin/users/{user}/impersonate', [\App\Http\Controllers\AdminController::class, 'impersonate'])->middleware('throttle:10,1')->name('admin.impersonate');
+    Route::post('/admin/impersonation/stop', [\App\Http\Controllers\AdminController::class, 'stop'])->name('admin.impersonation.stop');
     Route::get('/dashboard', [BookController::class, 'index'])->name('dashboard');
     Route::post('/books', [BookController::class, 'store'])->name('books.store');
     Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show');

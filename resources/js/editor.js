@@ -1,3 +1,4 @@
+import { t, locale } from "./i18n";
 import { Schema } from "prosemirror-model";
 import { schema as basic } from "prosemirror-schema-basic";
 import {
@@ -70,8 +71,8 @@ export function createEditor(
                             "data-codex": ids.join(","),
                             title:
                                 ids.length > 1
-                                    ? "Choose a matching codex entry"
-                                    : "Open codex entry",
+                                    ? t("Choose a matching codex entry")
+                                    : t("Open codex entry"),
                         },
                     ),
                 );
@@ -133,7 +134,7 @@ export function createEditor(
     const view = new EditorView($("#editor"), {
         state,
         attributes: {
-            "aria-label": "Book manuscript",
+            "aria-label": t("Book manuscript"),
             role: "textbox",
             "aria-multiline": "true",
         },
@@ -289,8 +290,12 @@ export function createEditor(
         const selected = count(
             view.state.doc.textBetween(selection.from, selection.to, " "),
         );
-        $("#word-count").textContent =
-            `${count(view.state.doc.textBetween(0, view.state.doc.content.size, " ")).toLocaleString()} words${selected ? ` · ${selected} selected` : ""}`;
+        $("#word-count").textContent = t(":v0 words:v1", {
+            v0: count(
+                view.state.doc.textBetween(0, view.state.doc.content.size, " "),
+            ).toLocaleString(locale()),
+            v1: selected ? t(" · :v0 selected", { v0: selected }) : "",
+        });
     }
     function outline() {
         $("#outline").replaceChildren();
@@ -298,7 +303,7 @@ export function createEditor(
             if (node.type.name === "heading") {
                 const btn = element(
                     "button",
-                    node.textContent || "Untitled heading",
+                    node.textContent || t("Untitled heading"),
                 );
                 btn.onclick = () => {
                     view.dispatch(

@@ -14,7 +14,7 @@ class SelectionEdit
         $utf16 = mb_convert_encoding($text, 'UTF-16LE', 'UTF-8');
         $part = substr($utf16, $from * 2, $length * 2);
         $result = mb_convert_encoding($part, 'UTF-8', 'UTF-16LE');
-        abort_unless(mb_convert_encoding($result, 'UTF-16LE', 'UTF-8') === $part, 422, 'Selection splits a Unicode character. Select the text again.');
+        abort_unless(mb_convert_encoding($result, 'UTF-16LE', 'UTF-8') === $part, 422, __('Selection splits a Unicode character. Select the text again.'));
 
         return $result;
     }
@@ -43,11 +43,11 @@ class SelectionEdit
     {
         $blocks = $doc['content'];
         [$start, $end, $from, $to] = [$scope['from_block'], $scope['to_block'], $scope['from_offset'], $scope['to_offset']];
-        abort_unless(isset($blocks[$start], $blocks[$end]) && $end >= $start, 422, 'Invalid selected range.');
+        abort_unless(isset($blocks[$start], $blocks[$end]) && $end >= $start, 422, __('Invalid selected range.'));
         foreach ([$start, $end] as $index) {
-            abort_unless(in_array($blocks[$index]['type'], ['paragraph', 'heading']), 422, 'Select text within paragraphs or headings.');
+            abort_unless(in_array($blocks[$index]['type'], ['paragraph', 'heading']), 422, __('Select text within paragraphs or headings.'));
         }
-        abort_unless($from <= self::length(Manuscript::text(['content' => [$blocks[$start]]])) && $to <= self::length(Manuscript::text(['content' => [$blocks[$end]]])) && ($start !== $end || $to > $from), 422, 'Invalid selected text offsets.');
+        abort_unless($from <= self::length(Manuscript::text(['content' => [$blocks[$start]]])) && $to <= self::length(Manuscript::text(['content' => [$blocks[$end]]])) && ($start !== $end || $to > $from), 422, __('Invalid selected text offsets.'));
         $parts = [];
         for ($i = $start; $i <= $end; $i++) {
             $node = $blocks[$i];
@@ -60,7 +60,7 @@ class SelectionEdit
 
     public static function apply(array $doc, array $scope, string $replacement): array
     {
-        abort_unless(self::text($doc, $scope) === $scope['text'], 409, 'Selected text changed. Select it again.');
+        abort_unless(self::text($doc, $scope) === $scope['text'], 409, __('Selected text changed. Select it again.'));
         $first = $doc['content'][$scope['from_block']];
         $last = $doc['content'][$scope['to_block']];
         $prefix = self::fragment($first, 0, $scope['from_offset']);

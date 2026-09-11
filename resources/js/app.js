@@ -1,3 +1,4 @@
+import { t, locale } from "./i18n";
 import { setupTypography } from "./typography";
 import { api, notify, $, element, action } from "./api";
 
@@ -6,12 +7,12 @@ document.querySelectorAll("[data-copy-payload]").forEach((button) => {
         const input = document.getElementById(button.dataset.copyPayload);
         try {
             await navigator.clipboard.writeText(input.value);
-            button.textContent = "Copied";
-            setTimeout(() => (button.textContent = "Copy JSON"), 1500);
+            button.textContent = t("Copied");
+            setTimeout(() => (button.textContent = t("Copy JSON")), 1500);
         } catch {
             input.focus();
             input.select();
-            notify("JSON selected. Press Ctrl+C or Cmd+C to copy.");
+            notify(t("JSON selected. Press Ctrl+C or Cmd+C to copy."));
         }
     });
 });
@@ -42,9 +43,13 @@ function showTheme(value) {
         $("#theme-current").replaceChildren(
             selected.querySelector("svg").cloneNode(true),
         );
-        $("#theme-current").setAttribute("aria-label", `Appearance: ${value}`);
-        $("#theme-current").title =
-            `${value[0].toUpperCase() + value.slice(1)} mode · Change appearance`;
+        $("#theme-current").setAttribute(
+            "aria-label",
+            t("Appearance: :v0", { v0: t(value) }),
+        );
+        $("#theme-current").title = t(":v0 mode · Change appearance", {
+            v0: t(value[0].toUpperCase() + value.slice(1)),
+        });
     }
 }
 showTheme(document.documentElement.dataset.theme);

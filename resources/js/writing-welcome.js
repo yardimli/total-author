@@ -1,11 +1,14 @@
+import { t, locale } from "./i18n";
 export function showWritingWelcome(initialModel) {
     const dialog = document.querySelector("#writing-welcome");
     const chat = document.querySelector("#chat-input");
     const picker = document.querySelector("#model-picker");
     const setModel = (name) => {
         document.querySelector("#welcome-model").textContent = name
-            ? `You’ll be writing with ${name}.`
-            : "Choose an AI model from the model picker before sending your first message.";
+            ? t("You’ll be writing with :v0.", { v0: name })
+            : t(
+                  "Choose an AI model from the model picker before sending your first message.",
+              );
     };
     setModel(initialModel);
     let highlightTimer;

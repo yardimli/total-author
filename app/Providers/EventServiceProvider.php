@@ -25,7 +25,11 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Event::listen(\Illuminate\Auth\Events\Login::class, function () {
+        Event::listen(\Illuminate\Auth\Events\Login::class, function ($event) {
+            if (! $event->user->locale) {
+                $event->user->locale = app()->getLocale();
+                $event->user->save();
+            }
             if (request()->hasSession()) {
                 request()->session()->put('refresh_model_catalog', true);
             }

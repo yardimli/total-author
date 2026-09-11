@@ -1,3 +1,4 @@
+import { t, locale } from "./i18n";
 import { api, $, action, notify } from "./api";
 
 export function start() {
@@ -20,7 +21,9 @@ export function start() {
         form.addEventListener("submit", (event) => {
             if (
                 !confirm(
-                    "Move this book to recently deleted? You can recover it from your library.",
+                    t(
+                        "Move this book to recently deleted? You can recover it from your library.",
+                    ),
                 )
             )
                 event.preventDefault();
@@ -60,7 +63,7 @@ export function start() {
             $("#library-confirm-import").disabled = true;
             if (!file) return;
             if (file.size > 10 * 1024 * 1024)
-                throw new Error("Please import a file smaller than 10 MB.");
+                throw new Error(t("Please import a file smaller than 10 MB."));
             let text;
             if (file.name.toLowerCase().endsWith(".docx")) {
                 const mammoth = await import("mammoth/mammoth.browser");
@@ -71,7 +74,7 @@ export function start() {
                 ).value;
             } else if (file.name.toLowerCase().endsWith(".txt"))
                 text = await file.text();
-            else throw new Error("Choose a TXT or DOCX story.");
+            else throw new Error(t("Choose a TXT or DOCX story."));
             if (version !== readVersion) return;
             $("#library-import-preview").value = text;
             $("#library-confirm-import").disabled = false;
@@ -93,7 +96,9 @@ export function start() {
             await api(`/api/books/${bookId}`, "PATCH", { revision, document });
             dialog.close();
             notify(
-                "Story imported. Open the manuscript to continue writing or scan its codex.",
+                t(
+                    "Story imported. Open the manuscript to continue writing or scan its codex.",
+                ),
             );
         } finally {
             $("#library-confirm-import").disabled = false;
