@@ -2289,3 +2289,26 @@ body:has(#workspace) dialog {
         grid-template-columns: 1fr;
     }
 }
+.chat-pane {
+    position: relative;
+}
+#chat-resizer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 7px;
+    cursor: col-resize;
+    touch-action: none;
+    z-index: 5;
+}
+#chat-resizer:hover,
+#chat-resizer:focus-visible {
+    background: var(--accent);
+    outline: none;
+}
+@media (max-width: 760px) {
+    #chat-resizer {
+        display: none;
+    }
+}

@@ -35,7 +35,7 @@
             <div id="editor-scroll"><div id="editor"></div></div>
             <footer class="page-navigation"><span id="word-count">0 words</span><span id="ai-thinking-status" role="status" hidden>AI is thinking. Please don’t write anything.</span></footer>
         </section>
-        <aside class="chat-pane" aria-label="AI writing companion">
+        <aside class="chat-pane" aria-label="AI writing companion"><div id="chat-resizer" role="separator" tabindex="0" aria-label="Resize chat panel" aria-orientation="vertical" aria-valuemin="260" aria-valuemax="640" aria-valuenow="360"></div>
             <div class="chat-heading"><div class="eyebrow">A SECOND PAIR OF EYES</div><h2>Your writing companion <span>✧</span></h2><p class="muted">Think aloud. Explore a possibility. Keep your voice.</p></div>
             <details id="model-picker"><summary id="model-summary">Choose an AI model</summary><div class="model-menu"><label class="check model-favorites"><input id="favorites-only" type="checkbox" @checked(auth()->user()->favorites_only)> Favorites only</label><div id="model-search-filters"><input id="model-search" placeholder="Search models…" aria-label="Search models">
                 <div class="model-filters">

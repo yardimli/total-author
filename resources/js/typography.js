@@ -12,6 +12,7 @@ export function setupTypography() {
         align: "left",
         ui: "100",
         panel: 300,
+        chat: 360,
     };
     let saved = {};
     try {
@@ -28,6 +29,7 @@ export function setupTypography() {
     }
     settings.ui = String(Math.min(130, Math.max(80, Number(saved.ui) || 100)));
     settings.panel = Math.min(560, Math.max(180, Number(saved.panel) || 300));
+    settings.chat = Math.min(640, Math.max(260, Number(saved.chat) || 360));
     function persist() {
         try {
             localStorage.setItem(key, JSON.stringify(settings));
@@ -44,6 +46,15 @@ export function setupTypography() {
         const width = Math.min(max, Math.max(180, value));
         workspace.style.setProperty("--sidebar-size", `${width}px`);
         const handle = document.querySelector("#panel-resizer");
+        handle.setAttribute("aria-valuenow", String(Math.round(width)));
+        handle.setAttribute("aria-valuemax", String(Math.round(max)));
+        return width;
+    }
+    function chatWidth(value) {
+        const max = Math.max(260, Math.min(640, workspace.clientWidth * 0.45));
+        const width = Math.min(max, Math.max(260, value));
+        workspace.style.setProperty("--chat-width", `${width}px`);
+        const handle = document.querySelector("#chat-resizer");
         handle.setAttribute("aria-valuenow", String(Math.round(width)));
         handle.setAttribute("aria-valuemax", String(Math.round(max)));
         return width;
@@ -131,6 +142,40 @@ export function setupTypography() {
         );
         persist();
     });
-    window.addEventListener("resize", () => panelWidth(settings.panel));
+    const chatHandle = document.querySelector("#chat-resizer");
+    chatHandle.addEventListener("pointerdown", (event) => {
+        if (event.button !== 0) return;
+        event.preventDefault();
+        chatHandle.setPointerCapture(event.pointerId);
+        workspace.classList.add("resizing-panel");
+    });
+    chatHandle.addEventListener("pointermove", (event) => {
+        if (!chatHandle.hasPointerCapture(event.pointerId)) return;
+        settings.chat = chatWidth(
+            workspace.getBoundingClientRect().right - event.clientX,
+        );
+    });
+    chatHandle.addEventListener("lostpointercapture", finish);
+    chatHandle.addEventListener("pointerup", (event) => {
+        if (chatHandle.hasPointerCapture(event.pointerId))
+            chatHandle.releasePointerCapture(event.pointerId);
+    });
+    chatHandle.addEventListener("keydown", (event) => {
+        if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key))
+            return;
+        event.preventDefault();
+        settings.chat = chatWidth(
+            event.key === "Home"
+                ? 260
+                : event.key === "End"
+                  ? 640
+                  : settings.chat + (event.key === "ArrowLeft" ? 20 : -20),
+        );
+        persist();
+    });
+    window.addEventListener("resize", () => {
+        panelWidth(settings.panel);
+        chatWidth(settings.chat);
+    });
     apply();
 }
