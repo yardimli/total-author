@@ -2211,3 +2211,81 @@ dialog {
     color: var(--accent);
     font-size: 12px;
 }
+/* Interface scale is independent of manuscript typography. */
+body:has(#workspace) .site-header,
+#workspace .book-bar,
+#workspace .editor-toolbar,
+#workspace .chat-pane,
+#workspace .page-navigation,
+#side-panel > :not(#panel-resizer),
+body:has(#workspace) dialog {
+    zoom: var(--ui-scale, 1);
+}
+#workspace.panel-open {
+    --panel-width: var(--sidebar-size, 300px);
+}
+#side-panel {
+    width: var(--sidebar-size, 300px);
+}
+.side-panel-shell {
+    position: relative;
+}
+#panel-resizer {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 7px;
+    cursor: col-resize;
+    touch-action: none;
+    z-index: 3;
+}
+.panel-open #panel-resizer {
+    display: block;
+}
+#panel-resizer:hover,
+#panel-resizer:focus-visible {
+    background: var(--accent);
+    outline: none;
+}
+#workspace.resizing-panel .workspace-grid {
+    transition: none;
+    user-select: none;
+}
+#typography-dialog {
+    width: min(620px, 92vw);
+    max-height: 85dvh;
+    overflow-y: auto;
+}
+.typography-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 24px;
+    margin: 20px 0;
+}
+.typography-grid label {
+    min-width: 0;
+}
+#type-ui {
+    width: 100%;
+}
+#editor {
+    width: min(var(--type-width, 760px), 100%);
+}
+#editor .ProseMirror {
+    font-family: var(--type-font, Georgia), serif;
+    font-size: var(--type-size, 18px);
+    line-height: var(--type-line, 1.8);
+}
+#editor .ProseMirror p {
+    text-indent: var(--type-indent, 0em);
+    margin-top: 0;
+    margin-bottom: var(--type-spacing, 1em);
+    text-align: var(--type-align, left);
+}
+@media (max-width: 480px) {
+    .typography-grid {
+        grid-template-columns: 1fr;
+    }
+}

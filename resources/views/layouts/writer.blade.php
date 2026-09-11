@@ -16,6 +16,7 @@
         <a class="nav-icon" href="{{ route('dashboard') }}" aria-label="My library" title="My library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h4v16H3Zm6 0h4v16H9Zm6 1 4-1 3 15-4 1Z"/></svg></a>
         <a class="nav-icon" href="{{ route('settings') }}" aria-label="Account" title="Account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></a>
         @endauth
+        @if(request()->routeIs('books.show'))<button type="button" id="open-typography" title="Typography settings" aria-label="Typography settings">Aa <small id="ui-scale-label">100%</small></button>@endif
         <details class="theme-switcher" id="theme-picker">
             <summary id="theme-current" aria-label="Appearance: {{ ucfirst(auth()->user()->theme ?? 'paper') }}" title="Change appearance">@include('partials.theme-icon', ['mode' => auth()->user()->theme ?? 'paper'])</summary>
             <div class="theme-menu" role="group" aria-label="Appearance">

@@ -1,3 +1,4 @@
+import { setupTypography } from "./typography";
 import { api, notify, $, element, action } from "./api";
 
 document.querySelectorAll("[data-copy-payload]").forEach((button) => {
@@ -82,3 +83,5 @@ if ($("#library-import-dialog"))
     import("./library")
         .then((module) => module.start())
         .catch((e) => notify(e.message));
+
+if (document.querySelector("#workspace")) setupTypography();

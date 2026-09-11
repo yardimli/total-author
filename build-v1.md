@@ -274,3 +274,5 @@ Legend: `[x]` completed and checked, `[-]` in progress, `[ ]` remaining.
 - [x] B92 Make manuscript and chat input read-only during AI requests; disable manuscript formatting controls and show thinking status beside the word count. Restore editing after completion, cancellation, or failure, including refresh errors. Isolated browser verified blocked document mutations and restored editing; production assets rebuilt.
 
 - [x] B93 Replace cheapest-model default with GPT-5.6 Sol when available in favorites; otherwise choose the first supported favorite in saved order. Preserve explicit user choices and leave selection empty when no favorites are available. Five focused tests / 34 assertions pass.
+
+- [x] B94 Add pointer/keyboard sidebar resizing and top-right typography settings for font, text size, line height, indent, paragraph spacing, page width, and alignment. Independent UI scale defaults to 100% with an 80-130% range; settings persist per account in this browser. Verified 130% UI leaves manuscript at 18px, sidebar keyboard resizing, and no desktop horizontal overflow. Production assets and Blade views compile.
