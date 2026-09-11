@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Total Author</title>
+  <rect x=".75" y=".75" width="62.5" height="62.5" fill="#e2d3b5" stroke="#3f382c" stroke-width="1.5"/>
+  <g transform="rotate(-12 33 30)">
+    <path d="M19 9H47V49H19Z" fill="#eee2c9" stroke="#b9a98c" stroke-width="1.5"/>
+    <path d="M24 17H42M24 23H42M24 29H42" fill="none" stroke="#c3b497" stroke-width="1.5"/>
+  </g>
+  <g fill="#302d26">
+    <path d="M8 23H34L34.5 31H33C32.3 26.4 30.8 25 25 25V48C25 50 26 50.5 30 51V52H12V51C16 50.5 17 50 17 48V25C11.2 25 9.7 26.4 9 31H7.5Z"/>
+    <path fill-rule="evenodd" d="M42 22H44L54 47C55 49.5 56 50.5 58 51V52H43V51C46 50.5 47 50 46 47L44.5 43H34L32.5 47C31.5 49.8 32.5 50.5 36 51V52H26V51C28.5 50.5 29.5 49.5 31 46ZM35 40.5H43.5L39.3 29.5Z"/>
+  </g>
+</svg>

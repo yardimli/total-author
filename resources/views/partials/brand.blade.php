@@ -1,0 +1,1 @@
+@if(config('app.logo'))<img class="app-logo" src="{{ asset(config('app.logo')) }}" alt="">@endif<span>{{ config('app.name') }}</span>
