@@ -35,6 +35,51 @@ class WritingWorkspaceTest extends TestCase
         return $model;
     }
 
+    public function test_ai_html_round_trip_keeps_formatting_and_excludes_it_from_classification(): void
+    {
+        $book = $this->book();
+        $this->catalog();
+        $book->document = \App\Services\ManuscriptHtml::replacement('<h1>Opening</h1><p>Mara <strong>waited</strong> by the <em>gate</em>.</p>', 'html');
+        $book->save();
+        $html = '<h1>Opening</h1><p>Mara <strong>lingered</strong> by the <em>gate</em>.</p>';
+        Http::fake(['*/chat/completions' => Http::sequence()->push(['usage' => ['cost' => 0], 'choices' => [['message' => ['content' => json_encode(['intent' => 'manuscript', 'entry_ids' => [], 'needs_names' => false])]]]])->push(['usage' => ['cost' => 0], 'choices' => [['message' => ['content' => json_encode(['chat_response' => 'Revised.', 'changes' => [['operation' => 'manuscript_replace', 'start_block' => 0, 'end_block' => 2, 'content_format' => 'html', 'content' => $html]]])]]]])]);
+        $this->postJson('/api/books/'.$book->id.'/chat', ['request_id' => (string) Str::uuid(), 'message' => 'Revise', 'model' => 'test/writer', 'history' => '0'])->assertOk();
+        $sent = Http::recorded();
+        $this->assertStringNotContainsString('<strong>', json_encode($sent[0][0]->data()));
+        $context = json_decode(collect($sent[1][0]['messages'])->last()['content'], true);
+        $this->assertSame('<p>Mara <strong>waited</strong> by the <em>gate</em>.</p>', $context['blocks'][1]);
+        $proposal = $book->proposals()->first();
+        $this->assertArrayHasKey('before_document', $proposal->changes[0]);
+        $this->postJson('/api/books/'.$book->id.'/proposals/'.$proposal->id, ['accept' => [0]])->assertOk();
+        $this->assertSame($html, str_replace("\n", '', \App\Services\ManuscriptHtml::html($book->fresh()->document)));
+    }
+
+    public function test_ai_plain_text_approval_does_not_insert_blank_paragraphs(): void
+    {
+        $book = $this->book();
+        $proposal = $book->proposals()->create(['base_revision' => $book->fresh()->revision, 'changes' => [['operation' => 'manuscript_replace', 'start_block' => 0, 'end_block' => 1, 'content' => "First.\n\n  \nSecond.\r\n\r\nThird."]]]);
+        $this->postJson('/api/books/'.$book->id.'/proposals/'.$proposal->id, ['accept' => [0]])->assertOk();
+        $this->assertCount(3, $book->fresh()->document['content']);
+        $this->assertSame("First.\nSecond.\nThird.", $book->fresh()->manuscript);
+    }
+
+    public function test_html_selection_preserves_marks_and_unselected_unicode(): void
+    {
+        $doc = \App\Services\ManuscriptHtml::replacement('<p><strong>😀 left </strong><em>old</em><code> right</code></p>');
+        $scope = ['from_block' => 0, 'to_block' => 0, 'from_offset' => 8, 'to_offset' => 11, 'text' => 'old'];
+        $this->assertSame('<p><em>old</em></p>', \App\Services\ManuscriptHtml::html(\App\Services\SelectionEdit::document($doc, $scope)));
+        $result = \App\Services\SelectionEdit::apply($doc, $scope, '<p><em>new</em></p>');
+        $this->assertSame('<p><strong>😀 left </strong><em>new</em><code> right</code></p>', \App\Services\ManuscriptHtml::html($result));
+    }
+
+    public function test_html_import_rejects_interactive_markup_and_ignores_attributes(): void
+    {
+        $doc = \App\Services\ManuscriptHtml::replacement('<p onclick="bad()"><strong style="color:red">Safe</strong><br>text</p><hr>');
+        $this->assertSame("<p><strong>Safe</strong><br>text</p>\n<hr>", \App\Services\ManuscriptHtml::html($doc));
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        \App\Services\ManuscriptHtml::replacement('<p>Text<button>Click</button></p>');
+    }
+
     public function test_books_cannot_be_accessed_by_another_account(): void
     {
         $book = $this->book();
@@ -399,10 +444,13 @@ class WritingWorkspaceTest extends TestCase
         $calls = 0;
         Http::fake(['*/chat/completions' => function () use (&$calls) {
             $calls++;
-            if ($calls === 1) throw new \Illuminate\Http\Client\ConnectionException('cURL error 28: timed out');
+            if ($calls === 1) {
+                throw new \Illuminate\Http\Client\ConnectionException('cURL error 28: timed out');
+            }
             $content = $calls === 2
                 ? ['intent' => 'conversation', 'entry_ids' => [], 'needs_names' => false]
                 : ['chat_response' => 'Ready to continue.', 'changes' => [], 'suggestions' => []];
+
             return Http::response(['usage' => ['cost' => .001], 'choices' => [['message' => ['content' => json_encode($content)]]]]);
         }]);
         $request = ['message' => 'Discuss this book', 'model' => 'test/writer', 'history' => '0'];
@@ -420,8 +468,11 @@ class WritingWorkspaceTest extends TestCase
         $message = $book->messages()->create(['role' => 'user', 'content' => 'Please revise this scene.', 'status' => 'pending']);
         $lock = new \App\Services\BookChatLock;
         $this->assertTrue($lock->acquire($book->id));
-        try { $this->getJson('/api/books/'.$book->id)->assertOk()->assertJsonPath('messages.0.status', 'pending'); }
-        finally { $lock->release(); }
+        try {
+            $this->getJson('/api/books/'.$book->id)->assertOk()->assertJsonPath('messages.0.status', 'pending');
+        } finally {
+            $lock->release();
+        }
         $this->getJson('/api/books/'.$book->id)->assertOk()->assertJsonPath('messages.0.status', 'failed');
         $this->deleteJson('/api/books/'.$book->id.'/messages/'.$message->id)->assertOk();
         $this->assertSoftDeleted('chat_messages', ['id' => $message->id]);
@@ -437,7 +488,9 @@ class WritingWorkspaceTest extends TestCase
         try {
             $this->assertFalse($second->acquire($book->id));
             $this->postJson('/api/books/'.$book->id.'/chat', ['request_id' => (string) Str::uuid(), 'message' => 'Hello', 'model' => 'test/writer', 'history' => '0'])->assertStatus(409);
-        } finally { $first->release(); }
+        } finally {
+            $first->release();
+        }
         $this->assertTrue($second->acquire($book->id));
         $second->release();
     }
@@ -546,7 +599,7 @@ class WritingWorkspaceTest extends TestCase
                 $this->assertGreaterThanOrEqual(500, str_word_count($window['before']));
                 $this->assertLessThan(530, str_word_count($window['before']));
             } else {
-                $this->assertSame($paragraphs, $context['blocks']);
+                $this->assertSame(array_map(fn ($text) => '<p>'.$text.'</p>', $paragraphs), $context['blocks']);
                 $window = $context['cursor_focus'];
                 $this->assertStringNotContainsString('Sentence0 ', json_encode($window));
                 $this->assertStringNotContainsString('Sentence400 ', json_encode($window));

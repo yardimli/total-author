@@ -2,7 +2,7 @@ import { t, locale } from "./i18n";
 import { structuredPatch } from "diff";
 
 // Markdown makes prose, headings, and inline formatting readable in a line diff.
-function manuscript(doc) {
+export function manuscript(doc) {
     function inline(node) {
         if (node.type === "hard_break") return "\n";
         let text =

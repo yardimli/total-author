@@ -58,14 +58,28 @@ class SelectionEdit
         return implode("\n", $parts);
     }
 
-    public static function apply(array $doc, array $scope, string $replacement): array
+    public static function document(array $doc, array $scope): array
+    {
+        self::text($doc, $scope);
+        $nodes = [];
+        for ($i = $scope['from_block']; $i <= $scope['to_block']; $i++) {
+            $node = $doc['content'][$i];
+            $node['content'] = self::fragment($node, $i === $scope['from_block'] ? $scope['from_offset'] : 0, $i === $scope['to_block'] ? $scope['to_offset'] : PHP_INT_MAX);
+            $nodes[] = $node;
+        }
+
+        return ['type' => 'doc', 'content' => $nodes];
+    }
+
+    public static function apply(array $doc, array $scope, string $replacement, ?array $replacementDocument = null): array
     {
         abort_unless(self::text($doc, $scope) === $scope['text'], 409, __('Selected text changed. Select it again.'));
         $first = $doc['content'][$scope['from_block']];
         $last = $doc['content'][$scope['to_block']];
         $prefix = self::fragment($first, 0, $scope['from_offset']);
         $suffix = self::fragment($last, $scope['to_offset'], PHP_INT_MAX);
-        $nodes = Manuscript::fromText($replacement)['content'];
+        $nodes = ($replacementDocument ?? ManuscriptHtml::replacement($replacement))['content'];
+        abort_if(collect($nodes)->contains(fn ($node) => ! in_array($node['type'], ['paragraph', 'heading'])), 422, __('Selection replacements must contain paragraphs or headings only.'));
         $nodes[0] = array_replace($first, ['content' => [...$prefix, ...($nodes[0]['content'] ?? [])]]);
         $end = count($nodes) - 1;
         if ($end > 0) {

@@ -5,7 +5,7 @@ import { api, notify, $, element, action } from "./api";
 import { createEditor, fromText } from "./editor";
 import { diffWordsWithSpace } from "diff";
 import { money } from "./money";
-import { revisionDiff } from "./revision-diff";
+import { revisionDiff, manuscript } from "./revision-diff";
 
 export async function start() {
     for (const target of ["writing", "chat"]) {
@@ -1186,7 +1186,10 @@ export async function start() {
                     change.operation,
                 )
             )
-                section.append(diffText(change.before, change.content));
+                section.append(diffText(
+                    change.before_document ? manuscript(change.before_document) : change.before,
+                    change.replacement_document ? manuscript(change.replacement_document) : change.content,
+                ));
             else
                 for (const field of ["name", "type", "content", "aliases"]) {
                     section.append(

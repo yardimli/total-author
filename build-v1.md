@@ -306,3 +306,5 @@ Legend: `[x]` completed and checked, `[-]` in progress, `[ ]` remaining.
 - [x] B109 Localize the empty manuscript hint through Laravel catalogs and the generated JavaScript translations; CSS reads the translated data-placeholder attribute. Turkish: Buradan başlayın. Sayfa sizin. Production assets rebuilt.
 
 - [x] B110 Replace Turkish Bilgi kitabı terminology with Kodeks across navigation, sidebar title, chat hints, status messages, and public copy. Rebuild production assets and verify localization catalogs.
+
+- [x] B111 Send HTML-formatted manuscript blocks and selected HTML to the execution LLM; preserve the lightweight classifier and selection-only context boundary. Request supported noninteractive markup and convert it into validated ProseMirror nodes for approval. Plain-text AI replacements skip blank separator lines without changing manual editor/import behavior. Diff review includes formatting markers; preserve unselected marks and Unicode selection offsets. Production assets built; 89 tests / 1208 assertions pass. Existing saved manuscripts are not rewritten automatically.

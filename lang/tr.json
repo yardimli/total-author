@@ -687,5 +687,7 @@
   "No users found.": "Kullanıcı bulunamadı.",
   "Return to admin": "Yönetime dön",
   "Logged in as :name": ":name olarak giriş yapıldı",
-  "Begin here. The page is yours.": "Buradan başlayın. Sayfa sizin."
+  "Begin here. The page is yours.": "Buradan başlayın. Sayfa sizin.",
+  "Unsupported manuscript HTML. Use paragraphs, headings, bold, italic, code, line breaks, or scene breaks only.": "Desteklenmeyen metin HTML biçimi. Yalnızca paragraf, başlık, kalın, italik, kod, satır sonu veya sahne ayracı kullanın.",
+  "Selection replacements must contain paragraphs or headings only.": "Seçili metin değişiklikleri yalnızca paragraf veya başlık içermelidir."
 }

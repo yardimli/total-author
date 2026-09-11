@@ -229,3 +229,6 @@ All users default to `is_admin = 0`. Set `users.is_admin` to `1` directly in the
 The user list shows join date, book and archive counts, AI call count, settled AI cost, and demo spent/reserved amounts. Deleted books are excluded from book counts; financial values round up to two decimal places.
 
 Admins can use **Log in as user** for non-admin accounts. This switches the current browser session to that user's permissions and data. The header shows the current user's name and **Return to admin**. Impersonation cannot be nested or used to enter another admin account. Logging out ends the session; revoking the original administrator's flag also ends their impersonation session on the next request. Start/return events are recorded in Laravel's log with the two user IDs. Admin privileges are not editable through registration or account forms.
+
+AI manuscript edits send HTML blocks (or selected HTML with nearby text context). Supported markup includes paragraphs, h1/h2, bold, italic, inline code, line breaks, and scene breaks. Proposed HTML is converted into validated editor nodes; interactive elements are rejected and attributes are discarded. Plain-text fallback ignores blank separator lines. Formatting appears as Markdown markers in proposal diffs. Existing manuscripts are not automatically reformatted.
+

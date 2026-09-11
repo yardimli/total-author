@@ -687,5 +687,7 @@
   "No users found.": "No users found.",
   "Return to admin": "Return to admin",
   "Logged in as :name": "Logged in as :name",
-  "Begin here. The page is yours.": "Begin here. The page is yours."
+  "Begin here. The page is yours.": "Begin here. The page is yours.",
+  "Unsupported manuscript HTML. Use paragraphs, headings, bold, italic, code, line breaks, or scene breaks only.": "Unsupported manuscript HTML. Use paragraphs, headings, bold, italic, code, line breaks, or scene breaks only.",
+  "Selection replacements must contain paragraphs or headings only.": "Selection replacements must contain paragraphs or headings only."
 }
