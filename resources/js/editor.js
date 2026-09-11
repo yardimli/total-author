@@ -135,6 +135,7 @@ export function createEditor(
         state,
         attributes: {
             "aria-label": t("Book manuscript"),
+            "data-placeholder": t("Begin here. The page is yours."),
             role: "textbox",
             "aria-multiline": "true",
         },

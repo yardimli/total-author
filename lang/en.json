@@ -686,5 +686,6 @@
   "Log in as user": "Log in as user",
   "No users found.": "No users found.",
   "Return to admin": "Return to admin",
-  "Logged in as :name": "Logged in as :name"
+  "Logged in as :name": "Logged in as :name",
+  "Begin here. The page is yours.": "Begin here. The page is yours."
 }

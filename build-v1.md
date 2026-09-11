@@ -302,3 +302,7 @@ Legend: `[x]` completed and checked, `[-]` in progress, `[ ]` remaining.
 - [x] B107 Add default-off users.is_admin flag, protected searchable/paginated user statistics page, dashboard Admin link, and POST-only user impersonation with a visible return action. Prevent privilege mass assignment, nested/admin targets, and continued impersonation after admin revocation; log start/return IDs. Migrate local database, build assets, compile Blade, and pass 85 tests / 1192 assertions. Pin the test locale to English independently of local APP_LOCALE.
 
 - [x] B108 Remove AI suggestion-to-button rendering from chat (including historical replies); keep suggestions as stored plain text and keep existing review/delete controls. Instruct the model not to emit UI actions. Show codex Delete only for persisted IDs, guard invalid IDs, await in-flight saves before deletion, and clear local draft state after successful deletion. Verified book 3 in-browser and invalid-ID no-request guard; assets rebuilt; 85 tests / 1192 assertions pass. Future: optional explicit AI-driven UI interactions remain deferred.
+
+- [x] B109 Localize the empty manuscript hint through Laravel catalogs and the generated JavaScript translations; CSS reads the translated data-placeholder attribute. Turkish: Buradan başlayın. Sayfa sizin. Production assets rebuilt.
+
+- [x] B110 Replace Turkish Bilgi kitabı terminology with Kodeks across navigation, sidebar title, chat hints, status messages, and public copy. Rebuild production assets and verify localization catalogs.

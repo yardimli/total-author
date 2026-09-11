@@ -526,7 +526,7 @@ small {
     width: 60px;
 }
 .ProseMirror:has(> p:only-child > br:only-child):before {
-    content: "Begin here. The page is yours.";
+    content: attr(data-placeholder);
     color: var(--muted);
     position: absolute;
     pointer-events: none;

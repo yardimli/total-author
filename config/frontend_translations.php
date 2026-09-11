@@ -21,6 +21,7 @@ return [
     'Before AI changes',
     'Before codex deletion',
     'Before revision restore',
+    'Begin here. The page is yours.',
     'Book :v0 · Account :v1 · Demo left :v2:v3',
     'Book details',
     'Book details & codex types',

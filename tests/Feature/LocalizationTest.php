@@ -65,7 +65,7 @@ class LocalizationTest extends TestCase
         $this->actingAs($user)->post('/language',['locale'=>'tr'])->assertRedirect();
         $this->assertSame('tr',$user->fresh()->locale);
         $this->flushSession();
-        $this->get('/books/'.$book->id)->assertOk()->assertSee('Bilgi kitabı')->assertSee('value="Male"',false)->assertSee('Tipografi ayarları');
+        $this->get('/books/'.$book->id)->assertOk()->assertSee('Kodeks')->assertSee('value="Male"',false)->assertSee('Tipografi ayarları');
         $this->postJson('/books',[])->assertUnprocessable()->assertJsonPath('errors.title.0','Başlık alanı zorunludur.');
         $this->patchJson('/api/books/'.$book->id,['revision'=>999,'document'=>Manuscript::fromText('Changed')])->assertStatus(409)->assertJsonPath('message',__('This book changed in another tab or operation. Reload the latest version before saving. Your local draft is preserved.'));
         $this->assertSame('Original words',Manuscript::text($book->fresh()->document));
