@@ -2160,3 +2160,24 @@ dialog {
         gap: 0;
     }
 }
+
+#writing-welcome {
+    width: min(580px, calc(100vw - 32px));
+    max-height: calc(100dvh - 40px);
+    overflow-y: auto;
+}
+#writing-welcome p {
+    margin: 18px 0;
+}
+#writing-welcome .welcome-model {
+    padding: 12px 15px;
+    border-left: 3px solid var(--accent);
+    background: var(--soft);
+    font-weight: bold;
+}
+#chat-input.welcome-highlight,
+#model-picker.welcome-highlight {
+    outline: 3px solid var(--accent);
+    outline-offset: -3px;
+    box-shadow: 0 0 0 3px var(--soft);
+}

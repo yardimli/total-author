@@ -16,13 +16,16 @@ class SettingsController extends Controller
     public function update(Request $request)
     {
         $data = $request->validate(['openrouter_key' => 'nullable|string|max:500', 'selected_model' => 'nullable|string|max:200', 'favorite_models' => 'sometimes|array|max:200',
-            'favorite_models.*' => 'string|max:200', 'theme' => 'sometimes|in:paper,light,dark']);
+            'favorite_models.*' => 'string|max:200', 'favorites_only' => 'sometimes|boolean', 'theme' => 'sometimes|in:paper,light,dark']);
         $user = $request->user();
         foreach ($data as $key => $value) {
             $user->$key = $value;
         }
         if (array_key_exists('favorite_models', $data)) {
             $user->favorites_initialized_at = now();
+        }
+        if (array_key_exists('selected_model', $data)) {
+            $user->model_selected_at = now();
         }
         $user->save();
 

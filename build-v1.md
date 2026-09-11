@@ -262,3 +262,7 @@ Legend: `[x]` completed and checked, `[-]` in progress, `[ ]` remaining.
 - [x] B86 Add dynamic robots.txt and sitemap.xml for public pages, APP_URL-based canonical URLs, and noindex on auth/workspace views. Keep private book/account routes authenticated and excluded from crawling.
 
 - [x] B87 Extract ten model IDs from the supplied links into config/default_favorites.php. On first eligible writing-page visit, seed favorites from exact supported catalog matches, reuse login refresh/cache, preserve existing choices and deliberate empty lists, and retry later when no catalog is available. Migration applied; 69 PHP tests / 365 assertions pass.
+
+- [x] B88 Default first-time model pickers to Favorites only, persist filter preference, and select the cheapest supported favorite by output price (input price breaks ties). Preserve existing/manual model choices; automatic choices are reconsidered on writing-page visits until an explicit model selection. Migration applied; 70 tests / 374 assertions pass; production assets rebuilt.
+
+- [x] B89 Show welcome on every writing-page entry, including browser back/forward restoration. Name the current model, explain cheaper-model instruction-following limitations and suggest mid-range choices. Closing via button/X/Escape highlights model/chat controls and focuses the chat cursor, switching mobile to chat. Isolated browser fixture verifies focus, highlights, mobile behavior, and repeat opening; production assets rebuilt.

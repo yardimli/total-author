@@ -50,6 +50,7 @@ class DefaultFavoritesTest extends TestCase
     {
         $user = User::factory()->create();
         $user->favorite_models = ['other/model'];
+        Cache::forever('openrouter.catalog', $this->catalog());
         $user->save();
         $book = $this->book($user);
         Http::fake();
@@ -71,5 +72,23 @@ class DefaultFavoritesTest extends TestCase
         $this->assertNotNull($user->fresh()->favorites_initialized_at);
         $this->get('/api/models')->assertOk();
         Http::assertSentCount(2);
+    }
+
+    public function test_new_members_get_cheapest_favorite_until_they_choose_a_model(): void
+    {
+        $user = User::factory()->create();
+        $book = $this->book($user);
+        $catalog = $this->catalog();
+        $catalog['data'][0]['pricing'] = ['prompt' => '0.000003', 'completion' => '0.000002'];
+        $catalog['data'][1]['pricing'] = ['prompt' => '0.000001', 'completion' => '0.000010'];
+        Cache::forever('openrouter.catalog', $catalog);
+        $this->actingAs($user)->get('/books/'.$book->id)->assertOk()->assertSee('id="favorites-only" type="checkbox" checked', false);
+        $this->assertSame('openai/gpt-5.6-sol', $user->fresh()->selected_model);
+        $this->assertNull($user->fresh()->model_selected_at);
+        $this->patchJson('/account', ['selected_model' => 'anthropic/claude-opus-5', 'favorites_only' => false])->assertOk();
+        $this->get('/books/'.$book->id)->assertOk();
+        $this->assertSame('anthropic/claude-opus-5', $user->fresh()->selected_model);
+        $this->assertNotNull($user->fresh()->model_selected_at);
+        $this->assertFalse((bool) $user->fresh()->favorites_only);
     }
 }

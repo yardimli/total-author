@@ -37,7 +37,7 @@
         </section>
         <aside class="chat-pane" aria-label="AI writing companion">
             <div class="chat-heading"><div class="eyebrow">A SECOND PAIR OF EYES</div><h2>Your writing companion <span>✧</span></h2><p class="muted">Think aloud. Explore a possibility. Keep your voice.</p></div>
-            <details id="model-picker"><summary id="model-summary">Choose an AI model</summary><div class="model-menu"><label class="check model-favorites"><input id="favorites-only" type="checkbox"> Favorites only</label><div id="model-search-filters"><input id="model-search" placeholder="Search models…" aria-label="Search models">
+            <details id="model-picker"><summary id="model-summary">Choose an AI model</summary><div class="model-menu"><label class="check model-favorites"><input id="favorites-only" type="checkbox" @checked(auth()->user()->favorites_only)> Favorites only</label><div id="model-search-filters"><input id="model-search" placeholder="Search models…" aria-label="Search models">
                 <div class="model-filters">
                     
                     <fieldset class="model-price-range"><legend>Output $ / 1M tokens</legend><label>Min<input id="model-price-min" type="number" min="0" step="any" value="1" aria-label="Minimum model output price in USD per million tokens"></label><label>Max<input id="model-price-max" type="number" min="0" step="any" value="10" aria-label="Maximum model output price in USD per million tokens"></label></fieldset>
@@ -70,6 +70,14 @@
 <p>This prompt contains approximately <strong id="large-prompt-count"></strong> words. Sending this much text can be expensive.</p>
 <p>Consider selecting a passage in the manuscript first. Selection editing sends only that passage and nearby context, along with your codex and chosen chat history.</p>
 <form method="dialog"><label class="check"><input type="checkbox" id="disable-large-prompt-warning"> Disable this warning for the next hour</label><div class="row"><button value="cancel" autofocus>Cancel</button><button value="send" class="primary">Send anyway</button></div></form>
+</dialog>
+<dialog id="writing-welcome" aria-labelledby="writing-welcome-title" aria-describedby="welcome-model welcome-model-advice">
+<div class="dialog-heading"><h2 id="writing-welcome-title">Welcome to your writing desk</h2><button type="button" data-welcome-close aria-label="Close welcome">×</button></div>
+<p>Start with an idea, a question, or a scene. Tell your writing companion what you want to work on, or write directly in the manuscript.</p>
+<p id="welcome-model" class="welcome-model" aria-live="polite"></p>
+<p id="welcome-model-advice">Cheaper models may struggle to follow detailed instructions consistently. Consider a mid-range model for complex revisions and book-wide changes. Price isn’t a guarantee of quality—always review the proposed changes.</p>
+<p class="muted">Use the model picker to change your companion. Select text in the manuscript for a focused edit. Every AI change is yours to review and approve.</p>
+<button type="button" class="primary" data-welcome-close autofocus>Let’s write ↗</button>
 </dialog>
 @endsection
 

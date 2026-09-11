@@ -1,3 +1,4 @@
+import { showWritingWelcome } from "./writing-welcome";
 import { api, notify, $, element, action } from "./api";
 import { createEditor, fromText } from "./editor";
 import { diffWordsWithSpace } from "diff";
@@ -43,6 +44,7 @@ export async function start() {
         activeProposal = null,
         busy = false,
         uncertainRequest = null;
+    const welcome = showWritingWelcome(model);
     const enqueue = (fn) => {
         const operation = writeChain.then(fn);
         writeChain = operation.catch(() => {});
@@ -710,8 +712,12 @@ export async function start() {
     }
     function renderModels() {
         const selected = models.find((m) => m.id === model);
+        welcome.setModel(
+            selected?.name ||
+                (model ? `${model} (currently unavailable)` : null),
+        );
         $("#model-summary").textContent = selected
-            ? selected.name
+            ? `Writing with ${selected.name}`
             : model
               ? "Saved model unavailable — choose another"
               : "Choose an AI model";
@@ -811,7 +817,16 @@ export async function start() {
         }
     }
     action("#model-search", renderModels, "input");
-    action("#favorites-only", renderModels, "change");
+    action(
+        "#favorites-only",
+        async () => {
+            renderModels();
+            await api("/account", "PATCH", {
+                favorites_only: $("#favorites-only").checked,
+            });
+        },
+        "change",
+    );
     action("#model-price-min", renderModels, "input");
     action("#model-price-max", renderModels, "input");
     action("#refresh-models", () => loadModels(true));
